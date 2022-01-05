@@ -9,8 +9,7 @@ logging.getLogger('sseclient').disabled = True
 logging.getLogger('urllib3.connectionpool').disabled = True
 
 
-rule_engine = RuleEngine.new_singleton("http://192.168.1.27:8080/", "C:\\workspace\\\\openhab_rules", "grro", "Stabilo33!")
-rule_engine.start()
+rule_engine = RuleEngine.start_singleton("http://192.168.1.27:8080/", "C:\\workspace\\\\openhab_rules", "grro", "Stabilo33!")
 
 '''
 for i in range(0, 10000):

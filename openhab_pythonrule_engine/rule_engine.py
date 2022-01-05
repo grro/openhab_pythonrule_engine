@@ -101,10 +101,10 @@ class RuleEngine:
         return RuleEngine.__instance
 
     @staticmethod
-    def new_singleton(openhab_uri:str, python_rule_directory: str = "/etc/openhab/automation/rules", user: str = None, pwd: str = None):
+    def start_singleton(openhab_uri:str, python_rule_directory: str = "/etc/openhab/automation/rules", user: str = None, pwd: str = None):
         rule_engine = RuleEngine(openhab_uri, python_rule_directory, user, pwd)
         RuleEngine.__instance = rule_engine
-        return rule_engine
+        rule_engine.start()
 
     def __init__(self, openhab_uri:str, python_rule_directory: str, user: str, pwd: str):
         self.__python_rule_directory = python_rule_directory
