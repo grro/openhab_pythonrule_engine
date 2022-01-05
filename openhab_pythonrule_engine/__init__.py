@@ -6,7 +6,7 @@ from string import Template
 
 
 PACKAGENAME = 'openhab-pythonrule-engine'
-ENTRY_POINT = "pyrules"
+ENTRY_POINT = "pyrule"
 DESCRIPTION = "Openhab python rule engine"
 
 
