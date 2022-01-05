@@ -1,7 +1,7 @@
 import inspect
 import logging
 
-from item_registry import ItemRegistry
+from openhab_pythonrule_engine.item_registry import ItemRegistry
 
 
 class Invoker():

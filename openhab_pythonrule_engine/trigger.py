@@ -1,10 +1,10 @@
 import logging
 from abc import ABC
-from invoke import Invoker
-from item_registry import ItemRegistry
 from datetime import datetime
 from dataclasses import dataclass
 from typing import Optional
+from openhab_pythonrule_engine.invoke import Invoker
+from openhab_pythonrule_engine.item_registry import ItemRegistry
 
 
 @dataclass
