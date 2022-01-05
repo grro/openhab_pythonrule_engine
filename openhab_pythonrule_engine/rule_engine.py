@@ -105,6 +105,7 @@ class RuleEngine:
         rule_engine = RuleEngine(openhab_uri, python_rule_directory, user, pwd)
         RuleEngine.__instance = rule_engine
         rule_engine.start()
+        return rule_engine
 
     def __init__(self, openhab_uri:str, python_rule_directory: str, user: str, pwd: str):
         self.__python_rule_directory = python_rule_directory
