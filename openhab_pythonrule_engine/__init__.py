@@ -10,6 +10,7 @@ ENTRY_POINT = "pyrule"
 DESCRIPTION = "Openhab python rule engine"
 
 
+
 UNIT_TEMPLATE = Template('''
 [Unit]
 Description=$packagename
