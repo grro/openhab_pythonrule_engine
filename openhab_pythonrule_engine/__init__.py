@@ -1,7 +1,8 @@
 from openhab_pythonrule_engine.rule_engine_webthing import run_server
 from openhab_pythonrule_engine.app import App
+from openhab_pythonrule_engine.rule_engine import RuleEngine
 from string import Template
-from rule_engine import RuleEngine
+
 
 
 PACKAGENAME = 'openhab-pythonrule-engine'

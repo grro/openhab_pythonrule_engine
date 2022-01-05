@@ -1,6 +1,6 @@
 import logging
 from time import sleep
-from rule_engine import RuleEngine
+from openhab_pythonrule_engine.rule_engine import RuleEngine
 
 
 
@@ -9,7 +9,6 @@ logging.getLogger('sseclient').disabled = True
 logging.getLogger('urllib3.connectionpool').disabled = True
 
 
-#rule_engine = RuleEngine.new_singleton("http://localhost:8080/", "C:\\workspace\\\\openhab_rules", "grro", "Stabilo33!", "C:\\workspace\\\\openhab_rules")
 rule_engine = RuleEngine.new_singleton("http://192.168.1.27:8080/", "C:\\workspace\\\\openhab_rules", "grro", "Stabilo33!")
 rule_engine.start()
 

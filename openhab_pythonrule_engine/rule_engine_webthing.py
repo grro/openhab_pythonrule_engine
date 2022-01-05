@@ -1,8 +1,7 @@
 from webthing import (SingleThing, Value, Property, Thing, MultipleThings, WebThingServer)
-from typing import List
 import tornado.ioloop
 import logging
-from rule_engine import RuleEngine, Rule
+from openhab_pythonrule_engine.rule_engine import RuleEngine, Rule
 
 
 class RuleThing(Thing):

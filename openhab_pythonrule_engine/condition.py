@@ -1,6 +1,6 @@
 import logging
-from item_registry import ItemRegistry
-from rule_engine import CronTrigger, ItemChangedTrigger, SystemEventTrigger, RuleEngine
+from openhab_pythonrule_engine.item_registry import ItemRegistry
+from openhab_pythonrule_engine.rule_engine import CronTrigger, ItemChangedTrigger, SystemEventTrigger, RuleEngine
 
 
 def when(target: str):

@@ -5,12 +5,12 @@ import importlib
 import pycron
 from time import sleep
 from threading import Thread
-from trigger import TriggerRegistry, CronTrigger, ItemChangedTrigger, SystemEventTrigger, Trigger
-from eventbus_consumer import EventConsumer
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-from item_registry import ItemRegistry
 from typing import List
+from openhab_pythonrule_engine.item_registry import ItemRegistry
+from openhab_pythonrule_engine.trigger import TriggerRegistry, CronTrigger, ItemChangedTrigger, SystemEventTrigger, Trigger
+from openhab_pythonrule_engine.eventbus_consumer import EventConsumer
 
 
 class FileSystemListener(FileSystemEventHandler):
