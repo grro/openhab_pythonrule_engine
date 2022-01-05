@@ -1,8 +1,8 @@
 from setuptools import setup
 from os import path
 
-PACKAGENAME = 'openhab_pythonrule_engine'
-ENTRY_POINT = "pyrule"
+PACKAGENAME = 'openhab-pythonrule-engine'
+ENTRY_POINT = "pyrules"
 DESCRIPTION = "Openhab python rule engine"
 
 

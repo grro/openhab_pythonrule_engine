@@ -3,8 +3,8 @@ import requests
 from datetime import datetime, time
 from dataclasses import dataclass
 from requests.auth import HTTPBasicAuth
-from cache import Cache
 from typing import Optional, List, Dict, Set, Any
+from openhab_pythonrule_engine.cache import Cache
 
 
 @dataclass
