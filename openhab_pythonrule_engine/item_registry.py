@@ -322,8 +322,9 @@ class ItemRegistry:
             if item_metadata is None:
                 raise Exception("item " + item_name + " not exists")
             else:
+                old_state = self.get_state(item_name, None)
                 new_state = item_metadata.serialize(value)
-                if self.get_state(item_name, None) != new_state:
+                if old_state  != new_state:
                     self.set_item_state(item_name, item_metadata.serialize(value))
                     logging.debug("set " + item_name + " = " + new_state)
 

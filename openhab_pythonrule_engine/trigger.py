@@ -7,19 +7,6 @@ from openhab_pythonrule_engine.invoke import Invoker
 from openhab_pythonrule_engine.item_registry import ItemRegistry
 
 
-@dataclass
-class Execution:
-    datetime: datetime
-    error: Optional[Exception] = None
-
-    def __str__(self):
-        text = self.datetime.strftime("%Y-%m-%d-T%H:%M:%S")
-        if self.error is not None:
-            text += "  (Error: " + str(self.error) + ")"
-        return text
-
-    def __repr__(self):
-        return self.__str__()
 
 
 class Trigger(ABC):
@@ -30,22 +17,28 @@ class Trigger(ABC):
         self.invoker = Invoker.create(func)
         self.last_executions = []
         self.last_errors = {}
+        self.listeners = set()
+
+    def add_listener(self, listener):
+        self.listeners.add(listener)
 
     def is_valid(self):
         return self.invoker is not None
 
     def invoke(self, item_registry: ItemRegistry):
-        execution = None
         if len(self.last_executions) > 20:
             self.last_executions.pop(0)
         try:
             self.invoker.invoke(item_registry)
-            self.last_executions.append(Execution(datetime.now(), None))
+            self.last_executions.append(Execution(self, datetime.now(), None))
         except Exception as e:
-            self.last_executions.append(Execution(datetime.now(), e))
+            self.last_executions.append(Execution(self, datetime.now(), e))
             logging.warning("Error occurred by invoking " + self.name, e)
-
-
+        for listener in self.listeners:
+            try:
+                listener(self)
+            except Exception as e:
+                logging.warning("error occurred by calling listener", e)
 
     @property
     def module(self):
@@ -57,6 +50,29 @@ class Trigger(ABC):
 
     def __str__(self):
         return self.expression
+
+
+@dataclass
+class Execution:
+    trigger: Trigger
+    datetime: datetime
+    error: Optional[Exception] = None
+
+
+    def __lt__(self, other):
+        return self.datetime < other.datetime
+
+    def __eq__(self, other):
+        return self.datetime == other.datetime
+
+    def __str__(self):
+        text = self.datetime.strftime("%Y-%m-%d-T%H:%M:%S")
+        if self.error is not None:
+            text += "  (Error: " + str(self.error) + ")"
+        return text
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class CronTrigger(Trigger):

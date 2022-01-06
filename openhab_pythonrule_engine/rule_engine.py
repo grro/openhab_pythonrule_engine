@@ -5,11 +5,14 @@ import importlib
 import pycron
 from time import sleep
 from threading import Thread
+from datetime import datetime
+
+from pyreadline.console import event
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-from typing import List
+from typing import List, Set, Optional
 from openhab_pythonrule_engine.item_registry import ItemRegistry
-from openhab_pythonrule_engine.trigger import TriggerRegistry, CronTrigger, ItemChangedTrigger, SystemEventTrigger, Trigger
+from openhab_pythonrule_engine.trigger import TriggerRegistry, CronTrigger, ItemChangedTrigger, SystemEventTrigger, Trigger, Execution
 from openhab_pythonrule_engine.eventbus_consumer import EventConsumer
 
 
@@ -70,19 +73,71 @@ class Rule:
 
     def __init__(self, func):
         self.func = func
-        self.triggers = []
+        self.__triggers = []
+        self.__listeners = set()
 
     @property
-    def module(self):
+    def module(self) -> str:
         return self.func.__module__
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self.func.__name__
+
+    @property
+    def triggers(self) -> List[Trigger]:
+        return self.__triggers
+
+    @property
+    def last_executions(self) -> List[Execution]:
+        executions: list[Execution] = []
+        for trigger in self.__triggers:
+            for execution in trigger.last_executions:
+                executions.append(execution)
+        executions.sort(reverse=True)
+        return executions
+
+    @property
+    def last_execution_date(self) -> Optional[datetime]:
+        execution = self.__newest_execution()
+        if execution is None:
+            return None
+        else:
+            return execution.datetime
+
+    @property
+    def last_trigger(self) -> Optional[Trigger]:
+        execution = self.__newest_execution()
+        if execution is None:
+            return None
+        else:
+            return execution.trigger
+
+    def __newest_execution(self) -> Optional[Execution]:
+        last_execution = None
+        for trigger in self.__triggers:
+            for execution in trigger.last_executions:
+                if last_execution is None or execution.datetime > last_execution.datetime:
+                    last_execution = execution
+        return last_execution
+
+    def add_listener(self, listener):
+        self.__listeners.add(listener)
+
+    def add_trigger(self, trigger):
+        self.__triggers.append(trigger)
+        trigger.add_listener(self.on_trigger_executed)
+
+    def on_trigger_executed(self, trigger: Trigger):
+        for listener in self.__listeners:
+            try:
+                listener(self)
+            except Exception as e:
+                logging.warning("error occurred by calling listener", e)
 
     def __str__(self):
         text = self.module + ".py#" + self.name
-        for trigger in self.triggers:
+        for trigger in self.__triggers:
             text += "\r\n  * " + trigger.expression
             for execution in trigger.last_executions:
                 text += "\r\n      * " + str(execution)
@@ -91,6 +146,7 @@ class Rule:
 
     def __repr__(self):
         return self.__str__()
+
 
 class RuleEngine:
 
@@ -170,14 +226,14 @@ class RuleEngine:
             item_changed_trigger.on_event(event)
 
     @property
-    def rules(self) -> List[Rule]:
-        rules = []
+    def rules(self) -> Set[Rule]:
+        rules = set()
         for module in self.trigger_registry.triggers_by_module.keys():
             triggers = self.trigger_registry.triggers_by_module[module]
             for func in [trigger.func for trigger in triggers]:
                 rule = Rule(func)
-                rules.append(rule)
+                rules.add(rule)
                 for trigger in triggers:
                     if trigger.name == rule.name:
-                        rule.triggers.append(trigger)
+                        rule.add_trigger(trigger)
         return rules
