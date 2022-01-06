@@ -313,8 +313,8 @@ class ItemRegistry:
                 # time_string seems to be in format "2017-07-14T21:30:00"
                 return datetime.strptime(datetime_string, '%Y-%m-%dT%H:%M:%S')
 
-    def set_state(self, item_name: str, value):
-        if value is None:
+    def set_state(self, item_name: str, new_state):
+        if new_state is None:
             logging.warning("try to set " + item_name + " = None. ignoring it")
             return
         else:
@@ -323,10 +323,9 @@ class ItemRegistry:
                 raise Exception("item " + item_name + " not exists")
             else:
                 old_state = self.get_state(item_name, None)
-                new_state = item_metadata.serialize(value)
                 if old_state  != new_state:
-                    self.set_item_state(item_name, item_metadata.serialize(value))
-                    logging.debug("set " + item_name + " = " + new_state)
+                    self.set_item_state(item_name, item_metadata.serialize(new_state))
+                    logging.debug("set " + item_name + " = " + str(new_state))
 
 
 '''

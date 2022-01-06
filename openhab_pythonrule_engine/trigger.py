@@ -51,6 +51,9 @@ class Trigger(ABC):
     def __str__(self):
         return self.expression
 
+    def __repr__(self):
+        return self.__str__()
+
 
 @dataclass
 class Execution:
@@ -66,7 +69,7 @@ class Execution:
         return self.datetime == other.datetime
 
     def __str__(self):
-        text = self.datetime.strftime("%Y-%m-%d-T%H:%M:%S")
+        text = self.datetime.strftime("%Y-%m-%d-T%H:%M:%S") + " " + str(self.trigger)
         if self.error is not None:
             text += "  (Error: " + str(self.error) + ")"
         return text

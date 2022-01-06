@@ -42,6 +42,7 @@ class CronScheduler:
 
     def __init__(self):
         self.cron_trigger_by_module = {}
+        self.__is_running = True
         self.thread = Thread(target=self.__process, daemon=True)
 
     def add_job(self, cron_trigger: CronTrigger):
@@ -55,7 +56,7 @@ class CronScheduler:
             del self.cron_trigger_by_module[module]
 
     def __process(self):
-        while True:
+        while self.__is_running:
             for cron_triggers in list(self.cron_trigger_by_module.values()):
                 for cron_trigger in list(cron_triggers):
                     if pycron.is_now(cron_trigger.cron):
@@ -64,8 +65,14 @@ class CronScheduler:
                             cron_trigger.invoke(ItemRegistry.instance())
                         except Exception as e:
                             logging.warning("Error occurred by executing rule " + cron_trigger.name, e)
-            sleep(60)
+            sleep(60)  # minimum 60 sec!
 
+    def start(self):
+        self.thread.start()
+
+    def stop(self):
+        self.__is_running = False
+        Thread.join(self.thread)
 
 
 class Rule:
@@ -167,8 +174,10 @@ class RuleEngine:
         logging.info("connecting " + openhab_uri)
         ItemRegistry.new_singleton(openhab_uri, user, pwd)
         self.__event_consumer = EventConsumer(openhab_uri, self)
-        self.cron_scheduler = CronScheduler()
-        self.trigger_registry = TriggerRegistry()
+        self.__event_consumer.start()
+        self.__cron_scheduler = CronScheduler()
+        self.__cron_scheduler.start()
+        self.__trigger_registry = TriggerRegistry()
 
     def start(self):
         logging.info("rules directory is " + self.__python_rule_directory)
@@ -185,15 +194,15 @@ class RuleEngine:
         self.__event_consumer.start()
 
     def add_cron_trigger(self, trigger: CronTrigger):
-        self.trigger_registry.register(trigger)
-        self.cron_scheduler.add_job(trigger)
+        self.__trigger_registry.register(trigger)
+        self.__cron_scheduler.add_job(trigger)
 
     def add_item_changed_trigger(self, trigger: ItemChangedTrigger):
-        self.trigger_registry.register(trigger)
+        self.__trigger_registry.register(trigger)
 
     def add_system_event_trigger(self, trigger: SystemEventTrigger):
         trigger.invoke(ItemRegistry.instance())
-        self.trigger_registry.register(trigger)
+        self.__trigger_registry.register(trigger)
 
     def load_module(self, filename: str):
         if filename.endswith(".py"):
@@ -201,8 +210,8 @@ class RuleEngine:
             # reload?
             if modulename in sys.modules:
                 logging.info("reload '" + filename + "'")
-                self.cron_scheduler.remove_jobs(modulename)
-                self.trigger_registry.deregister(modulename)
+                self.__cron_scheduler.remove_jobs(modulename)
+                self.__trigger_registry.deregister(modulename)
                 importlib.reload(sys.modules[modulename])
             else:
                 logging.info("load '" + filename + "'")
@@ -212,8 +221,8 @@ class RuleEngine:
         modulename = self.__filename_to_modulename(filename)
         if modulename in sys.modules:
             logging.info("unload '" + filename + "'")
-            self.cron_scheduler.remove_jobs(modulename)
-            self.trigger_registry.deregister(modulename)
+            self.__cron_scheduler.remove_jobs(modulename)
+            self.__trigger_registry.deregister(modulename)
             del sys.modules[modulename]
 
     def __filename_to_modulename(self, filename):
@@ -221,14 +230,14 @@ class RuleEngine:
 
     def on_event(self, event):
         ItemRegistry.instance().on_event(event)
-        for item_changed_trigger in self.trigger_registry.get_triggers_by_type(ItemChangedTrigger):
+        for item_changed_trigger in self.__trigger_registry.get_triggers_by_type(ItemChangedTrigger):
             item_changed_trigger.on_event(event)
 
     @property
     def rules(self) -> Set[Rule]:
         rules = set()
-        for module in self.trigger_registry.triggers_by_module.keys():
-            triggers = self.trigger_registry.triggers_by_module[module]
+        for module in self.__trigger_registry.triggers_by_module.keys():
+            triggers = self.__trigger_registry.triggers_by_module[module]
             for func in [trigger.func for trigger in triggers]:
                 rule = Rule(func)
                 rules.add(rule)

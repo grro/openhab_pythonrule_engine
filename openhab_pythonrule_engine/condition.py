@@ -28,7 +28,7 @@ def when(target: str):
                 if trigger.is_valid():
                     RuleEngine.instance().add_item_changed_trigger(trigger)
                 else:
-                    logging.warning("Unsupported function spec " + str(function) + " Ignoring it")
+                    logging.warning("Unsupported function spec " + function.__module__ + "#" + function.__name__ + " Ignoring it")
                 return function
 
             return decorated_method
@@ -45,7 +45,7 @@ def when(target: str):
             if trigger.is_valid():
                 RuleEngine.instance().add_cron_trigger(trigger)
             else:
-                logging.warning("Unsupported function spec " + str(function) + " Ignoring it")
+                logging.warning("Unsupported function spec " + function.__module__ + "#" + function.__name__ + " Ignoring it")
             return function
 
         return decorated_method
@@ -58,7 +58,7 @@ def when(target: str):
             if trigger.is_valid():
                 RuleEngine.instance().add_system_event_trigger(trigger)
             else:
-                logging.warning("Unsupported function spec " + str(function) + " Ignoring it")
+                logging.warning("Unsupported function spec " + function.__module__ + "#" + function.__name__ + " Ignoring it")
             return function
 
         return decorated_method
