@@ -7,7 +7,6 @@ from time import sleep
 from threading import Thread
 from datetime import datetime
 
-from pyreadline.console import event
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from typing import List, Set, Optional
