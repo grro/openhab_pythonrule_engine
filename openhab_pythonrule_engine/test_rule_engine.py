@@ -8,15 +8,12 @@ logging.basicConfig(format='%(asctime)s %(name)-20s: %(levelname)-8s %(message)s
 logging.getLogger('sseclient').disabled = True
 logging.getLogger('urllib3.connectionpool').disabled = True
 
+def listener():
+    for rule in rule_engine.rules:
+        print(str(rule))
 
 
 rule_engine = RuleEngine.start_singleton("http://192.168.1.27:8080/", "C:\\workspace\\\\openhab_rules", "grro", "Stabilo33!")
+rule_engine.add_listener(listener)
 
-'''
-for i in range(0, 10000):
-    sleep(5)
-    print("")
-    for rule in rule_engine.rules:
-        print(str(rule))
-'''
 sleep(390000)

@@ -23,9 +23,11 @@ class FileSystemListener(FileSystemEventHandler):
 
     @staticmethod
     def start(rule_engine):
-        logging.info("observing rules directory " + rule_engine.python_rule_directory)
+        dir = rule_engine.python_rule_directory
+        logging.info("observing rules directory " + dir)
         observer = Observer()
-        observer.schedule(FileSystemListener(rule_engine), rule_engine.python_rule_directory, recursive=False)
+        observer.schedule(FileSystemListener(rule_engine), dir, recursive=False)
+        observer.start()
         return observer
 
     def __init__(self, rule_engine):
@@ -160,6 +162,9 @@ class Rule:
     def __eq__(self, other):
         return self.__str__() == other.__str__()
 
+    def __lt__(self, other):
+        return self.__str__() < other.__str__()
+
     def __str__(self):
         return self.module + ".py#" + self.name + " (" + ", ".join(["'" + trigger.expression + "'" for trigger in self.__triggers]) + ")"
 
@@ -183,12 +188,16 @@ class RuleEngine:
         return rule_engine
 
     def __init__(self, openhab_uri:str, python_rule_directory: str, user: str, pwd: str):
+        self.__listeners = set()
         self.python_rule_directory = python_rule_directory
         logging.info("connecting " + openhab_uri)
         ItemRegistry.new_singleton(openhab_uri, user, pwd)
         self.__event_consumer = EventConsumer(openhab_uri, self)
         self.__cron_scheduler = CronScheduler()
         self.__trigger_registry = TriggerRegistry()
+
+    def add_listener(self, listener):
+        self.__listeners.add(listener)
 
     def start(self):
         if self.python_rule_directory not in sys.path:
@@ -200,6 +209,7 @@ class RuleEngine:
         self.__event_consumer.start()
 
     def add_trigger(self, trigger: Trigger):
+        rules = self.rules
         if trigger.is_valid():
             logging.info(" * " + trigger.name + "(...): register trigger '" + trigger.expression + "'")
             self.__trigger_registry.register(trigger)
@@ -209,6 +219,12 @@ class RuleEngine:
                 trigger.invoke(ItemRegistry.instance())
         else:
             logging.warning("Unsupported function spec " + trigger.module + "#" + trigger.name + " Ignoring it")
+        if rules != self.rules:
+            for listener in self.__listeners:
+                try:
+                    listener()
+                except Exception as e:
+                    logging.warning("error occured calling rules lsitener", e)
 
     def load_module(self, filename: str):
         if filename.endswith(".py"):
@@ -242,7 +258,7 @@ class RuleEngine:
             item_changed_trigger.on_event(event)
 
     @property
-    def rules(self) -> Set[Rule]:
+    def rules(self) -> List[Rule]:
         rules = set()
         for module in self.__trigger_registry.triggers_by_module.keys():
             triggers = self.__trigger_registry.triggers_by_module[module]
@@ -252,4 +268,4 @@ class RuleEngine:
                     if trigger.name == rule.name:
                         rule.add_trigger(trigger)
                 rules.add(rule)
-        return rules
+        return sorted(list(rules))
