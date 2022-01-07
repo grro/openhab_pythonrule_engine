@@ -15,7 +15,18 @@ from openhab_pythonrule_engine.trigger import TriggerRegistry, CronTrigger, Item
 from openhab_pythonrule_engine.eventbus_consumer import EventConsumer
 
 
+logging = logging.getLogger("rule_engine")
+
+
+
 class FileSystemListener(FileSystemEventHandler):
+
+    @staticmethod
+    def start(rule_engine):
+        logging.info("observing rules directory " + rule_engine.python_rule_directory)
+        observer = Observer()
+        observer.schedule(FileSystemListener(rule_engine), rule_engine.python_rule_directory, recursive=False)
+        return observer
 
     def __init__(self, rule_engine):
         self.rule_engine = rule_engine
@@ -172,27 +183,20 @@ class RuleEngine:
         return rule_engine
 
     def __init__(self, openhab_uri:str, python_rule_directory: str, user: str, pwd: str):
-        self.__python_rule_directory = python_rule_directory
+        self.python_rule_directory = python_rule_directory
         logging.info("connecting " + openhab_uri)
         ItemRegistry.new_singleton(openhab_uri, user, pwd)
         self.__event_consumer = EventConsumer(openhab_uri, self)
-        self.__event_consumer.start()
         self.__cron_scheduler = CronScheduler()
-        self.__cron_scheduler.start()
         self.__trigger_registry = TriggerRegistry()
 
     def start(self):
-        logging.info("rules directory is " + self.__python_rule_directory)
-        if self.__python_rule_directory not in sys.path:
-            sys.path.insert(0, self.__python_rule_directory)
-
-        for file in os.scandir(self.__python_rule_directory):
+        if self.python_rule_directory not in sys.path:
+            sys.path.insert(0, self.python_rule_directory)
+        for file in os.scandir(self.python_rule_directory):
             self.load_module(file.name)
-
-        observer = Observer()
-        observer.schedule(FileSystemListener(self), self.__python_rule_directory, recursive=False)
-        observer.start()
-
+        FileSystemListener.start(self)
+        self.__cron_scheduler.start()
         self.__event_consumer.start()
 
     def add_trigger(self, trigger: Trigger):

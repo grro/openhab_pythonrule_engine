@@ -1,7 +1,12 @@
 import inspect
 import logging
+from logging import Logger
+
 
 from openhab_pythonrule_engine.item_registry import ItemRegistry
+
+
+logging = logging.getLogger("invoke")
 
 
 class Invoker():

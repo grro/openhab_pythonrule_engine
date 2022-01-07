@@ -7,6 +7,9 @@ from openhab_pythonrule_engine.invoke import Invoker
 from openhab_pythonrule_engine.item_registry import ItemRegistry
 
 
+logging = logging.getLogger("trigger")
+
+
 
 
 class Trigger(ABC):
@@ -58,7 +61,7 @@ class Trigger(ABC):
         return self.__str__() < other.__str__()
 
     def __str__(self):
-        return self.expression + " -> " + self.module + "#" + self.name
+        return self.expression
 
     def __repr__(self):
         return self.__str__()

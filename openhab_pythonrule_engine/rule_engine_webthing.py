@@ -33,7 +33,7 @@ class RuleThing(Thing):
         self.triggers = Value(", " .join([trigger.expression for trigger in rule.triggers]))
         self.add_property(
             Property(self,
-                     'trigger',
+                     'triggers',
                      self.triggers,
                      metadata={
                          'title': 'Last assigned triggers',
@@ -42,13 +42,13 @@ class RuleThing(Thing):
                          'readOnly': True,
                      }))
 
-        self.executions = Value("\r\n" .join([str(execution) for execution in rule.last_executions]))
+        self.history = Value("\r\n" .join([str(execution) for execution in rule.last_executions]))
         self.add_property(
             Property(self,
-                     'trigger_executions',
-                     self.executions,
+                     'history',
+                     self.history,
                      metadata={
-                         'title': 'The newsest trigger executions',
+                         'title': 'The newest trigger executions',
                          'type': 'string',
                          'description': 'The linebreak-separated newest trigger executions',
                          'readOnly': True,
@@ -89,7 +89,7 @@ class RuleThing(Thing):
         self.last_execution_date.notify_of_external_update("" if self.rule.last_execution_date is None else self.rule.last_execution_date.isoformat())
         self.last_trigger.notify_of_external_update("" if self.rule.last_trigger is None else self.rule.last_trigger.expression)
         self.triggers.notify_of_external_update(", " .join([trigger.expression for trigger in self.rule.triggers]))
-        self.executions.notify_of_external_update("\r\n" .join([str(execution) for execution in self.rule.last_executions]))
+        self.history.notify_of_external_update("\r\n" .join([str(execution) for execution in self.rule.last_executions]))
 
 
 def run_server(port: int, description: str, rule_engine: RuleEngine):

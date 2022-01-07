@@ -56,9 +56,10 @@ class App(ABC):
 
         print("using log level " + str(log_level))
         logging.basicConfig(format='%(asctime)s %(name)-20s: %(levelname)-8s %(message)s', level=log_level, datefmt='%Y-%m-%d %H:%M:%S')
-        logging.getLogger('sseclient').disabled = True
-        logging.getLogger('tornado.access').disabled = True
-        logging.getLogger('urllib3.connectionpool').disabled = True
+        logging.getLogger('sseclient').setLevel(logging.WARNING)
+        logging.getLogger('watchdog.observers.inotify_buffer').setLevel(logging.WARNING)
+        logging.getLogger('tornado.access').setLevel(logging.WARNING)
+        logging.getLogger('urllib3.connectionpool').setLevel(logging.WARNING)
 
         if args.command is None:
             self.print_usage_info(args.port)

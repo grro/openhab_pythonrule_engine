@@ -7,6 +7,9 @@ from typing import Optional, List, Dict, Set, Any
 from openhab_pythonrule_engine.cache import Cache
 
 
+logging = logging.getLogger("item_registry")
+
+
 @dataclass
 class Item:
     item_name: str
