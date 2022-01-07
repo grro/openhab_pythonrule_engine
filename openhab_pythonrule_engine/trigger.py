@@ -54,6 +54,9 @@ class Trigger(ABC):
     def __eq__(self, other):
         return self.__str__() == other.__str__()
 
+    def __lt__(self, other):
+        return self.__str__() < other.__str__()
+
     def __str__(self):
         return self.expression + " -> " + self.module + "#" + self.name
 
@@ -106,7 +109,6 @@ class Execution:
     trigger: Trigger
     datetime: datetime
     error: Optional[Exception] = None
-
 
     def __lt__(self, other):
         return self.datetime < other.datetime

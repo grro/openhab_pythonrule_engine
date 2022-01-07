@@ -132,6 +132,7 @@ class Rule:
 
     def add_trigger(self, trigger):
         self.__triggers.append(trigger)
+        self.__triggers = sorted(self.__triggers)
         trigger.add_listener(self.on_trigger_executed)
 
     def on_trigger_executed(self, trigger: Trigger):
@@ -140,6 +141,12 @@ class Rule:
                 listener(self)
             except Exception as e:
                 logging.warning("error occurred by calling listener", e)
+
+    def __hash__(self):
+        return hash(self.__str__())
+
+    def __eq__(self, other):
+        return self.__str__() == other.__str__()
 
     def __str__(self):
         return self.module + ".py#" + self.name + " (" + ", ".join(["'" + trigger.expression + "'" for trigger in self.__triggers]) + ")"
