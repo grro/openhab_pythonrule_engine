@@ -16,6 +16,7 @@ class RuleThing(Thing):
         )
 
         self.rule = rule
+        rule.add_listener(self.on_rule_executed)
 
         self.name = Value(rule.module + "." + rule.name)
         self.add_property(
@@ -29,7 +30,7 @@ class RuleThing(Thing):
                          'readOnly': True
                      }))
 
-        self.triggers = Value(", " .join([str(trigger) for trigger in rule.triggers]))
+        self.triggers = Value(", " .join([trigger.expression for trigger in rule.triggers]))
         self.add_property(
             Property(self,
                      'trigger',
@@ -66,7 +67,7 @@ class RuleThing(Thing):
                      'readOnly': True,
                  }))
 
-        self.last_trigger = Value("" if rule.last_trigger is None else str(rule.last_trigger))
+        self.last_trigger = Value("" if rule.last_trigger is None else rule.last_trigger.expression)
         self.add_property(
             Property(self,
                      'last_executed_trigger',
@@ -86,8 +87,8 @@ class RuleThing(Thing):
 
     def __sync_props(self):
         self.last_execution_date.notify_of_external_update("" if self.rule.last_execution_date is None else self.rule.last_execution_date.isoformat())
-        self.last_trigger.notify_of_external_update("" if self.rule.last_trigger is None else str(self.rule.last_trigger))
-        self.triggers.notify_of_external_update(", " .join([str(trigger) for trigger in self.rule.triggers]))
+        self.last_trigger.notify_of_external_update("" if self.rule.last_trigger is None else self.rule.last_trigger.expression)
+        self.triggers.notify_of_external_update(", " .join([trigger.expression for trigger in self.rule.triggers]))
         self.executions.notify_of_external_update("\r\n" .join([str(execution) for execution in self.rule.last_executions]))
 
 
