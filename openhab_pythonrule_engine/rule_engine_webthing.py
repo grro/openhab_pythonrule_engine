@@ -92,12 +92,7 @@ class RuleThing(Thing):
 
 
 def run_server(port: int, description: str, rule_engine: RuleEngine):
-    rules = rule_engine.rules
-    rule_webthings = set()
-    for rule in rules:
-        rule_webthings.add(RuleThing(description, rule))
-        logging.info("webthing created for rule " + str(rule))
-
+    rule_webthings = [RuleThing(description, rule) for rule in rule_engine.rules]
     server = WebThingServer(MultipleThings(rule_webthings, 'rule'), port=port, disable_host_validation=True)
 
     try:
