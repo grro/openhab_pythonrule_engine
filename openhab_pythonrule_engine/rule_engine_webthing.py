@@ -82,7 +82,7 @@ class RuleThing(Thing):
         self.ioloop = tornado.ioloop.IOLoop.current()
 
 
-    def on_rule_executed(self):
+    def on_rule_executed(self, rule):
         self.ioloop.add_callback(self.__sync_props)
 
     def __sync_props(self):

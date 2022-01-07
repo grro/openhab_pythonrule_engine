@@ -11,7 +11,7 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from typing import List, Set, Optional
 from openhab_pythonrule_engine.item_registry import ItemRegistry
-from openhab_pythonrule_engine.trigger import TriggerRegistry, CronTrigger, ItemChangedTrigger, SystemEventTrigger, Trigger, Execution
+from openhab_pythonrule_engine.trigger import TriggerRegistry, CronTrigger, ItemChangedTrigger, RuleLoadedTrigger, Trigger, Execution
 from openhab_pythonrule_engine.eventbus_consumer import EventConsumer
 
 
@@ -56,6 +56,7 @@ class CronScheduler:
             del self.cron_trigger_by_module[module]
 
     def __process(self):
+        logging.info("cron scheduler started")
         while self.__is_running:
             for cron_triggers in list(self.cron_trigger_by_module.values()):
                 for cron_trigger in list(cron_triggers):
@@ -194,16 +195,16 @@ class RuleEngine:
 
         self.__event_consumer.start()
 
-    def add_cron_trigger(self, trigger: CronTrigger):
-        self.__trigger_registry.register(trigger)
-        self.__cron_scheduler.add_job(trigger)
-
-    def add_item_changed_trigger(self, trigger: ItemChangedTrigger):
-        self.__trigger_registry.register(trigger)
-
-    def add_system_event_trigger(self, trigger: SystemEventTrigger):
-        trigger.invoke(ItemRegistry.instance())
-        self.__trigger_registry.register(trigger)
+    def add_trigger(self, trigger: Trigger):
+        if trigger.is_valid():
+            logging.info(" * " + trigger.name + "(...): register trigger '" + trigger.expression + "'")
+            self.__trigger_registry.register(trigger)
+            if isinstance(trigger, CronTrigger):
+                self.__cron_scheduler.add_job(trigger)
+            elif isinstance(trigger, RuleLoadedTrigger):
+                trigger.invoke(ItemRegistry.instance())
+        else:
+            logging.warning("Unsupported function spec " + trigger.module + "#" + trigger.name + " Ignoring it")
 
     def load_module(self, filename: str):
         if filename.endswith(".py"):

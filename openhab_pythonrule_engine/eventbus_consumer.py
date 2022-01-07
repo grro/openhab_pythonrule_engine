@@ -18,7 +18,7 @@ class EventConsumer:
         self.thread = None
 
     def start(self):
-        self.thread = Thread(target=self.__listen)
+        self.thread = Thread(target=self.__listen, daemon=True)
         self.thread.start()
 
     def __listen(self):

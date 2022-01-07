@@ -71,10 +71,11 @@ class CronTrigger(Trigger):
         super().__init__(expression, func)
 
 
-class SystemEventTrigger(Trigger):
+class RuleLoadedTrigger(Trigger):
 
     def __init__(self, expression: str, func):
         super().__init__(expression, func)
+
 
 
 class ItemChangedTrigger(Trigger):
