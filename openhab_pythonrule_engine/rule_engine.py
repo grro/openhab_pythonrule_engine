@@ -243,8 +243,8 @@ class RuleEngine:
             triggers = self.__trigger_registry.triggers_by_module[module]
             for func in [trigger.func for trigger in triggers]:
                 rule = Rule(func)
-                rules.add(rule)
                 for trigger in triggers:
                     if trigger.name == rule.name:
                         rule.add_trigger(trigger)
+                rules.add(rule)
         return rules

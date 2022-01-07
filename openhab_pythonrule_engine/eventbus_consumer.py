@@ -31,6 +31,7 @@ class EventConsumer:
                 try:
                     for event in client.events():
                         data = json.loads(event.data)
+                        #print(data)
                         self.event_listener.on_event(data)
                 finally:
                     logging.debug("closing sse stream")
