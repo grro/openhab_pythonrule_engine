@@ -224,7 +224,9 @@ class RuleEngine:
 
     def on_event(self, event):
         ItemRegistry.instance().on_event(event)
-        for item_changed_trigger in self.__trigger_registry.get_triggers_by_type(ItemChangedTrigger):
+        triggers = self.__trigger_registry.get_triggers_by_type(ItemChangedTrigger)
+        matching_triggers = [trigger for trigger in triggers if trigger.matches(event)]
+        for item_changed_trigger in matching_triggers:
             item_changed_trigger.on_event(event)
 
     @property

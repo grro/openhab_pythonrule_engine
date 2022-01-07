@@ -81,7 +81,7 @@ class ItemChangedTrigger(Trigger):
         self.operation = operation
         super().__init__(expression, func)
 
-    def on_event(self, event):
+    def matches(self, event):
         topic = event.get("topic", "")
         if topic.startswith('openhab') or topic.startswith('smarthome'):
             try:
@@ -92,12 +92,13 @@ class ItemChangedTrigger(Trigger):
                     if item_name == self.item_name:
                         operation = parts[3]
                         if operation == 'statechanged':
-                            logging.debug("executing rule " + self.invoker.name + " (triggerred by 'Item " + item_name + " changed')")
-                            self.invoke(ItemRegistry.instance())
+                            return True
             except Exception as e:
                 logging.warning("Error occurred by handling event " + str(event), e)
 
-
+    def on_event(self, event):
+        logging.debug("executing rule " + self.invoker.name + " (triggerred by '" + self.expression + "')")
+        self.invoke(ItemRegistry.instance())
 
 
 @dataclass
