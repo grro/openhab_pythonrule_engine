@@ -17,7 +17,8 @@ for i in range(0, 10000):
     sleep(5)
     print("")
     for rule in rule_engine.rules:
-        print(str(rule.last_executions))
-
+        print("")
+        print(str(rule))
 '''
+
 sleep(390000)

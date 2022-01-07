@@ -61,7 +61,7 @@ class CronScheduler:
                 for cron_trigger in list(cron_triggers):
                     if pycron.is_now(cron_trigger.cron):
                         try:
-                            logging.debug("executing rule " + cron_trigger.name + " (cron 'Time cron " + cron_trigger.cron + "')")
+                            logging.debug("executing rule " + cron_trigger.name + " (triggerred by 'Time cron " + cron_trigger.cron + "')")
                             cron_trigger.invoke(ItemRegistry.instance())
                         except Exception as e:
                             logging.warning("Error occurred by executing rule " + cron_trigger.name, e)
@@ -142,13 +142,7 @@ class Rule:
                 logging.warning("error occurred by calling listener", e)
 
     def __str__(self):
-        text = self.module + ".py#" + self.name
-        for trigger in self.__triggers:
-            text += "\r\n  * " + trigger.expression
-            for execution in trigger.last_executions:
-                text += "\r\n      * " + str(execution)
-
-        return  text
+        return self.module + ".py#" + self.name + " (" + ", ".join(["'" + trigger.expression + "'" for trigger in self.__triggers]) + ")"
 
     def __repr__(self):
         return self.__str__()

@@ -41,38 +41,21 @@ class Trigger(ABC):
                 logging.warning("error occurred by calling listener", e)
 
     @property
-    def module(self):
+    def module(self) -> str:
         return self.func.__module__
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self.func.__name__
 
-    def __str__(self):
-        return self.expression
-
-    def __repr__(self):
-        return self.__str__()
-
-
-@dataclass
-class Execution:
-    trigger: Trigger
-    datetime: datetime
-    error: Optional[Exception] = None
-
-
-    def __lt__(self, other):
-        return self.datetime < other.datetime
+    def __hash__(self):
+        return hash(self.__str__())
 
     def __eq__(self, other):
-        return self.datetime == other.datetime
+        return self.__str__() == other.__str__()
 
     def __str__(self):
-        text = self.datetime.strftime("%Y-%m-%d-T%H:%M:%S") + " " + str(self.trigger)
-        if self.error is not None:
-            text += "  (Error: " + str(self.error) + ")"
-        return text
+        return self.expression + " -> " + self.module + "#" + self.name
 
     def __repr__(self):
         return self.__str__()
@@ -109,11 +92,35 @@ class ItemChangedTrigger(Trigger):
                     if item_name == self.item_name:
                         operation = parts[3]
                         if operation == 'statechanged':
-                            logging.debug("executing rule " + self.invoker.name + " (trigger 'Item " + item_name + " changed')")
+                            logging.debug("executing rule " + self.invoker.name + " (triggerred by 'Item " + item_name + " changed')")
                             self.invoke(ItemRegistry.instance())
             except Exception as e:
                 logging.warning("Error occurred by handling event " + str(event), e)
 
+
+
+
+@dataclass
+class Execution:
+    trigger: Trigger
+    datetime: datetime
+    error: Optional[Exception] = None
+
+
+    def __lt__(self, other):
+        return self.datetime < other.datetime
+
+    def __eq__(self, other):
+        return self.datetime == other.datetime
+
+    def __str__(self):
+        text = self.datetime.strftime("%Y-%m-%d-T%H:%M:%S") + " " + str(self.trigger)
+        if self.error is not None:
+            text += "  (Error: " + str(self.error) + ")"
+        return text
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class TriggerRegistry:
