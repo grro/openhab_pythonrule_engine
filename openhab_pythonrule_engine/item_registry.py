@@ -112,6 +112,8 @@ class NumericItem(Item):
         else:
             if type(value_to_serialize) == bool:
                 return "1" if value_to_serialize else "0"
+            elif type(value_to_serialize) == int:
+                return str(float(value_to_serialize))
             else:
                 return str(value_to_serialize)
 
@@ -313,12 +315,13 @@ class ItemRegistry:
                 raise Exception("item " + item_name + " not exists")
             else:
                 old_state = self.get_state(item_name, None)
-                if old_state != new_state:
-                    serialized = item_metadata.serialize(new_state)
+                serialized_old_sate = item_metadata.serialize(old_state)
+                serialized_new_state = item_metadata.serialize(new_state)
+                if serialized_old_sate != serialized_new_state:
                     try:
-                        self.set_item_state(item_name, serialized)
-                        logging.debug("set " + item_name + " = " + serialized)
+                        self.set_item_state(item_name, serialized_new_state)
+                        logging.debug("set " + item_name + " = " + serialized_new_state)
                         return True
                     except Exception as e:
-                        logging.warning("could not set " + item_name + " = " + serialized, e)
+                        logging.warning("could not set " + item_name + " = " + serialized_new_state, e)
         return False
