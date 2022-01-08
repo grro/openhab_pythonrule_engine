@@ -6,7 +6,9 @@ import sseclient
 from threading import Thread
 
 
-logging = logging.getLogger("event_consumer")
+logging = logging.getLogger(__name__)
+
+
 
 
 class EventConsumer:

@@ -15,7 +15,9 @@ from openhab_pythonrule_engine.trigger import TriggerRegistry, CronTrigger, Item
 from openhab_pythonrule_engine.eventbus_consumer import EventConsumer
 
 
-logging = logging.getLogger("rule_engine")
+
+logging = logging.getLogger(__name__)
+
 
 
 
@@ -228,24 +230,30 @@ class RuleEngine:
 
     def load_module(self, filename: str):
         if filename.endswith(".py"):
-            modulename = self.__filename_to_modulename(filename)
-            # reload?
-            if modulename in sys.modules:
-                logging.info("reload '" + filename + "'")
-                self.__cron_scheduler.remove_jobs(modulename)
-                self.__trigger_registry.deregister(modulename)
-                importlib.reload(sys.modules[modulename])
-            else:
-                logging.info("load '" + filename + "'")
-                importlib.import_module(modulename)
+            try:
+                modulename = self.__filename_to_modulename(filename)
+                # reload?
+                if modulename in sys.modules:
+                    logging.info("reload '" + filename + "'")
+                    self.__cron_scheduler.remove_jobs(modulename)
+                    self.__trigger_registry.deregister(modulename)
+                    importlib.reload(sys.modules[modulename])
+                else:
+                    logging.info("load '" + filename + "'")
+                    importlib.import_module(modulename)
+            except Exception as e:
+                logging.warning("error occurred by (re)loading " + filename, e)
 
     def unload_module(self, filename: str):
-        modulename = self.__filename_to_modulename(filename)
-        if modulename in sys.modules:
-            logging.info("unload '" + filename + "'")
-            self.__cron_scheduler.remove_jobs(modulename)
-            self.__trigger_registry.deregister(modulename)
-            del sys.modules[modulename]
+        try:
+            modulename = self.__filename_to_modulename(filename)
+            if modulename in sys.modules:
+                logging.info("unload '" + filename + "'")
+                self.__cron_scheduler.remove_jobs(modulename)
+                self.__trigger_registry.deregister(modulename)
+                del sys.modules[modulename]
+        except Exception as e:
+            logging.warning("error occurred by unloading " + filename, e)
 
     def __filename_to_modulename(self, filename):
         return filename[:-3]

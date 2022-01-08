@@ -58,7 +58,7 @@ class App(ABC):
         logging.basicConfig(format='%(asctime)s %(name)-20s: %(levelname)-8s %(message)s', level=log_level, datefmt='%Y-%m-%d %H:%M:%S')
         logging.getLogger('sseclient').setLevel(logging.WARNING)
         logging.getLogger('watchdog.observers.inotify_buffer').setLevel(logging.WARNING)
-        logging.getLogger('tornado.access').setLevel(logging.WARNING)
+        logging.getLogger('tornado.access').setLevel(logging.ERROR)
         logging.getLogger('urllib3.connectionpool').setLevel(logging.WARNING)
 
         if args.command is None:

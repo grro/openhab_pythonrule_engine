@@ -7,7 +7,7 @@ from typing import Optional, List, Dict, Set, Any
 from openhab_pythonrule_engine.cache import Cache
 
 
-logging = logging.getLogger("item_registry")
+logging = logging.getLogger(__name__)
 
 
 @dataclass
@@ -72,15 +72,15 @@ class TextItem(Item):
         else:
             return float(self.value)
 
-    def serialize(self, value) -> Optional[str]:
-        if self.value is None:
+    def serialize(self, value_to_serialize) -> Optional[str]:
+        if value_to_serialize is None:
             return None
-        elif type(value) == bool:
-            return "ON" if value else "OFF"
-        elif type(value) == datetime:
-            return value.strftime('%Y-%m-%dT%H:%M:%S')
+        elif type(value_to_serialize) == bool:
+            return "ON" if value_to_serialize else "OFF"
+        elif type(value_to_serialize) == datetime:
+            return value_to_serialize.strftime('%Y-%m-%dT%H:%M:%S')
         else:
-            return str(value)
+            return str(value_to_serialize)
 
 
 @dataclass
@@ -106,14 +106,14 @@ class NumericItem(Item):
             return ""
         return str(self.value)
 
-    def serialize(self, value) -> Optional[str]:
-        if self.value is None:
+    def serialize(self, value_to_serialize) -> Optional[str]:
+        if value_to_serialize is None:
             return None
         else:
-            if type(value) == bool:
-                return "1" if value else "0"
+            if type(value_to_serialize) == bool:
+                return "1" if value_to_serialize else "0"
             else:
-                return str(value)
+                return str(value_to_serialize)
 
 
 @dataclass
@@ -143,15 +143,15 @@ class BooleanItem(Item):
         else:
             return str(self.value)
 
-    def serialize(self, value) -> Optional[str]:
-        if type(value) == bool:
-            return "ON" if value else "OFF"
-        elif type(value) == float:
-            return "ON" if value == 1.0 else "OFF"
-        elif type(value) == int:
-            return "ON" if value == 1 else "OFF"
+    def serialize(self, value_to_serialize) -> Optional[str]:
+        if type(value_to_serialize) == bool:
+            return "ON" if value_to_serialize else "OFF"
+        elif type(value_to_serialize) == float:
+            return "ON" if value_to_serialize == 1.0 else "OFF"
+        elif type(value_to_serialize) == int:
+            return "ON" if value_to_serialize == 1 else "OFF"
         else:
-            return "ON" if (str(value).lower() in ["true", "on"]) else "OFF"
+            return "ON" if (str(value_to_serialize).lower() in ["true", "on"]) else "OFF"
 
 
 def to_item(data) -> Optional[Item]:
@@ -299,34 +299,26 @@ class ItemRegistry:
     def get_state_as_datetime(self, item_name: str, datetime_string: str="1970-01-01") -> datetime:
         state = self.get_item(item_name)
         if state is None or state.value is None:
-            return self.__to_datetime_object(datetime_string)
+            return datetime.fromisoformat(datetime_string)
         else:
             return state.get_state_as_datetime()
 
-    def __to_datetime_object(self, datetime_string: str):
-        try:
-            # time_string may be in format 21:30
-            return datetime.strptime(datetime_string, '%H:%M')
-        except:
-            try:
-                # time_string may be in format "2017-07-14T21:30:00.000+0200"
-                dt, timezone = datetime_string.split(".")
-                return datetime.strptime(dt, '%Y-%m-%dT%H:%M:%S')
-            except:
-                # time_string seems to be in format "2017-07-14T21:30:00"
-                return datetime.strptime(datetime_string, '%Y-%m-%dT%H:%M:%S')
 
-    def set_state(self, item_name: str, new_state):
+    def set_state(self, item_name: str, new_state) -> bool:
         if new_state is None:
             logging.warning("try to set " + item_name + " = None. ignoring it")
-            return
         else:
             item_metadata = self.get_item_metadata(item_name)
             if item_metadata is None:
                 raise Exception("item " + item_name + " not exists")
             else:
                 old_state = self.get_state(item_name, None)
-                if old_state  != new_state:
-                    self.set_item_state(item_name, item_metadata.serialize(new_state))
-                    logging.debug("set " + item_name + " = " + str(new_state))
-
+                if old_state != new_state:
+                    serialized = item_metadata.serialize(new_state)
+                    try:
+                        self.set_item_state(item_name, serialized)
+                        logging.debug("set " + item_name + " = " + serialized)
+                        return True
+                    except Exception as e:
+                        logging.warning("could not set " + item_name + " = " + serialized, e)
+        return False
