@@ -4,11 +4,33 @@ import requests
 import json
 import sseclient
 from threading import Thread
+from typing import Optional
+from dataclasses import dataclass
 
 
 logging = logging.getLogger(__name__)
 
 
+
+
+@dataclass()
+class ItemEvent:
+    item_name: str
+    operation: str
+
+
+def parse_item_event(event) -> Optional[ItemEvent]:
+    topic = event.get("topic", "")
+    if topic.startswith('openhab') or topic.startswith('smarthome'):
+        try:
+            parts = topic.split("/")
+            if parts[1] == 'items':
+                item_name = parts[2]
+                operation = parts[3]
+                return ItemEvent(item_name, operation)
+        except Exception as e:
+            logging.warning("Error occurred by handling event " + str(event), e)
+    return None
 
 
 class EventConsumer:
@@ -35,7 +57,6 @@ class EventConsumer:
                 try:
                     for event in client.events():
                         data = json.loads(event.data)
-                        #print(data)
                         self.event_listener.on_event(data)
                 finally:
                     logging.debug("closing sse stream")

@@ -6,18 +6,15 @@ import pycron
 from time import sleep
 from threading import Thread
 from datetime import datetime
-
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from typing import List, Set, Optional
 from openhab_pythonrule_engine.item_registry import ItemRegistry
-from openhab_pythonrule_engine.trigger import TriggerRegistry, CronTrigger, ItemChangedTrigger, RuleLoadedTrigger, Trigger, Execution
-from openhab_pythonrule_engine.eventbus_consumer import EventConsumer
-
+from openhab_pythonrule_engine.trigger import TriggerRegistry, CronTrigger, ItemTrigger, RuleLoadedTrigger, ManualTrigger, Trigger, Execution
+from openhab_pythonrule_engine.eventbus_consumer import EventConsumer, parse_item_event
 
 
 logging = logging.getLogger(__name__)
-
 
 
 
@@ -77,7 +74,6 @@ class CronScheduler:
                 for cron_trigger in list(cron_triggers):
                     if pycron.is_now(cron_trigger.cron):
                         try:
-                            logging.debug("executing rule " + cron_trigger.name + " (triggerred by 'Time cron " + cron_trigger.cron + "')")
                             cron_trigger.invoke(ItemRegistry.instance())
                         except Exception as e:
                             logging.warning("Error occurred by executing rule " + cron_trigger.name, e)
@@ -150,6 +146,12 @@ class Rule:
         self.__triggers.append(trigger)
         self.__triggers = sorted(self.__triggers)
         trigger.add_listener(self.on_trigger_executed)
+
+    def execute(self, item_registry: ItemRegistry = ItemRegistry.instance()):
+        for trigger in self.triggers:
+            if isinstance(trigger, ManualTrigger):
+                trigger.invoke(item_registry)
+                return
 
     def on_trigger_executed(self, trigger: Trigger):
         for listener in self.__listeners:
@@ -260,10 +262,13 @@ class RuleEngine:
 
     def on_event(self, event):
         ItemRegistry.instance().on_event(event)
-        triggers = self.__trigger_registry.get_triggers_by_type(ItemChangedTrigger)
-        matching_triggers = [trigger for trigger in triggers if trigger.matches(event)]
-        for item_changed_trigger in matching_triggers:
-            item_changed_trigger.on_event(event)
+        triggers: List[ItemTrigger] = self.__trigger_registry.get_triggers_by_type(ItemTrigger)
+        item_event = parse_item_event(event)
+        if item_event is not None:
+            matching_triggers = [trigger for trigger in triggers if trigger.matches(item_event)]
+            for item_changed_trigger in matching_triggers:
+                item_changed_trigger.invoke(ItemRegistry.instance())
+
 
     @property
     def rules(self) -> List[Rule]:
@@ -272,6 +277,7 @@ class RuleEngine:
             triggers = self.__trigger_registry.triggers_by_module[module]
             for func in [trigger.func for trigger in triggers]:
                 rule = Rule(func)
+                rule.add_trigger(ManualTrigger(func))
                 for trigger in triggers:
                     if trigger.name == rule.name:
                         rule.add_trigger(trigger)

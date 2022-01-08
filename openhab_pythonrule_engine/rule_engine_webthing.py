@@ -42,6 +42,19 @@ class RuleThing(Thing):
                          'readOnly': True,
                      }))
 
+        self.execute = Value(False, self.__execute)
+        self.add_property(
+            Property(self,
+                     'execute',
+                     self.name,
+                     metadata={
+                         '@type': 'BooleanProperty',
+                         'title': 'execute',
+                         'type': 'boolean',
+                         'description': 'triggers the rule manually',
+                         'readOnly': False
+                     }))
+
         self.history = Value("\r\n" .join([str(execution) for execution in rule.last_executions]))
         self.add_property(
             Property(self,
@@ -81,6 +94,10 @@ class RuleThing(Thing):
 
         self.ioloop = tornado.ioloop.IOLoop.current()
 
+    def __execute(self, do_execute: bool):
+        if do_execute:
+            self.rule.execute()
+            self.execute.notify_of_external_update(False)
 
     def on_rule_executed(self, rule):
         self.ioloop.add_callback(self.__sync_props)

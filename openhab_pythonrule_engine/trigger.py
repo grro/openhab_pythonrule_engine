@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Optional
 from openhab_pythonrule_engine.invoke import Invoker
 from openhab_pythonrule_engine.item_registry import ItemRegistry
+from openhab_pythonrule_engine.eventbus_consumer import ItemEvent
 
 
 
@@ -29,6 +30,7 @@ class Trigger(ABC):
         return self.invoker is not None
 
     def invoke(self, item_registry: ItemRegistry):
+        logging.debug("executing rule " + self.invoker.name + " (triggerred by '" + self.expression + "')")
         if len(self.last_executions) > 20:
             self.last_executions.pop(0)
         try:
@@ -67,6 +69,12 @@ class Trigger(ABC):
         return self.__str__()
 
 
+class ManualTrigger(Trigger):
+
+    def __init__(self, func):
+        super().__init__("manual", func)
+
+
 class CronTrigger(Trigger):
 
     def __init__(self, cron: str, expression: str, func):
@@ -80,32 +88,36 @@ class RuleLoadedTrigger(Trigger):
         super().__init__(expression, func)
 
 
+class ItemTrigger(Trigger):
 
-class ItemChangedTrigger(Trigger):
+    def __init__(self, expression: str, func):
+        super().__init__(expression, func)
+
+    def matches(self, item_event: ItemEvent) -> bool:
+        return False
+
+
+class ItemReceivedCommandTrigger(ItemTrigger):
+
+    def __init__(self, item_name: str, expression: str, func):
+        self.item_name = item_name
+        super().__init__(expression, func)
+
+    def matches(self, item_event: ItemEvent) -> bool:
+        return item_event.item_name == self.item_name and item_event.operation == 'command'
+
+
+class ItemChangedTrigger(ItemTrigger):
 
     def __init__(self, item_name: str, operation: str, expression: str, func):
         self.item_name = item_name
         self.operation = operation
         super().__init__(expression, func)
 
-    def matches(self, event) -> bool:
-        topic = event.get("topic", "")
-        if topic.startswith('openhab') or topic.startswith('smarthome'):
-            try:
-                parts = topic.split("/")
-                #print(parts)
-                if parts[1] == 'items':
-                    item_name = parts[2]
-                    if item_name == self.item_name:
-                        operation = parts[3]
-                        if operation == 'statechanged':
-                            return True
-            except Exception as e:
-                logging.warning("Error occurred by handling event " + str(event), e)
+    def matches(self, item_event: ItemEvent) -> bool:
+        return item_event.item_name == self.item_name and item_event.operation == 'statechanged'
 
-    def on_event(self, event):
-        logging.debug("executing rule " + self.invoker.name + " (triggerred by '" + self.expression + "')")
-        self.invoke(ItemRegistry.instance())
+
 
 
 @dataclass

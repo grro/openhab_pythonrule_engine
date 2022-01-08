@@ -1,6 +1,7 @@
 import logging
 from openhab_pythonrule_engine.item_registry import ItemRegistry
-from openhab_pythonrule_engine.rule_engine import Trigger, CronTrigger, ItemChangedTrigger, RuleLoadedTrigger, RuleEngine
+from openhab_pythonrule_engine.rule_engine import RuleEngine
+from openhab_pythonrule_engine.trigger import CronTrigger, ItemReceivedCommandTrigger, ItemChangedTrigger, RuleLoadedTrigger
 
 
 
@@ -16,7 +17,27 @@ def when(target: str):
             to parse
     """
 
-    if target.lower().startswith("item"):
+    target = target.strip()
+
+
+    if target.lower().startswith("item") and target.lower().endswith(" received command"):
+        itemname_operation_pair = target[len("item"):].strip()
+        itemname = itemname_operation_pair[:itemname_operation_pair.index(" ")].strip()
+
+        if ItemRegistry.instance().has_item(itemname):
+            operation = itemname_operation_pair[itemname_operation_pair.index(" "):].strip()
+
+            def decorated_method(function):
+                trigger = ItemReceivedCommandTrigger(itemname, target, function)
+                RuleEngine.instance().add_trigger(trigger)
+                return function
+
+            return decorated_method
+        else:
+            logging.warning("item " + itemname + " does not exist (trigger " + target + ")")
+
+
+    elif target.lower().startswith("item"):
         itemname_operation_pair = target[len("item"):].strip()
         itemname = itemname_operation_pair[:itemname_operation_pair.index(" ")].strip()
 
