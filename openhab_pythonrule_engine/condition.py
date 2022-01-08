@@ -20,7 +20,14 @@ def when(target: str):
     target = target.strip()
 
 
-    if target.lower().startswith("item") and target.lower().endswith(" received command"):
+    if RuleEngine.instance() is None:
+        logging.warning("Environment has not been set. Ignoring decorator")
+
+        def decorated_method(function):
+            return function
+        return decorated_method
+
+    elif target.lower().startswith("item") and target.lower().endswith(" received command"):
         itemname_operation_pair = target[len("item"):].strip()
         itemname = itemname_operation_pair[:itemname_operation_pair.index(" ")].strip()
 
@@ -35,7 +42,6 @@ def when(target: str):
             return decorated_method
         else:
             logging.warning("item " + itemname + " does not exist (trigger " + target + ")")
-
 
     elif target.lower().startswith("item"):
         itemname_operation_pair = target[len("item"):].strip()
@@ -71,7 +77,6 @@ def when(target: str):
             return function
 
         return decorated_method
-
 
     else:
         logging.warning("unsupported expression " + target + " ignoring it")

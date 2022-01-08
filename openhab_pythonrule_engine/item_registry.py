@@ -245,7 +245,10 @@ class ItemRegistry:
             logging.warning("error occurred by calling " + uri, e)
 
     def has_item(self, item_name: str) -> bool:
-        return self.get_item(item_name) != None
+        if item_name is None:
+            return False
+        else:
+            return self.get_item(item_name) != None
 
     def get_group_membernames(self, group_name) -> List[str]:
         return [item.item_name for item in self.get_items().values() if group_name in item.group_names]
