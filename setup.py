@@ -36,7 +36,7 @@ setup(
         'webthings', 'home automation', 'openhab', 'python3', 'python', 'rules'
     ],
     install_requires=[
-        'webthing==0.15.0', 'requests==2.26.0', 'sseclient-py==1.7.2', 'watchdog==2.1.6', 'pycron==3.0.0'
+        'webthing==0.15.0', 'requests==2.26.0', 'sseclient-py==1.7.2', 'watchdog==2.1.6', 'pycron==3.0.0, python-dateutil==2.8.2'
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
