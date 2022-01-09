@@ -21,7 +21,7 @@ def when(target: str):
 
 
     if RuleEngine.instance() is None:
-        logging.warning("Environment has not been set. Ignoring decorator")
+        logging.warning("Environment has not been set. Ignoring decorator '@when(" + target + "')")
 
         def decorated_method(function):
             return function

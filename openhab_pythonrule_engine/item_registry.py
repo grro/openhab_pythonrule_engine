@@ -1,9 +1,10 @@
 import logging
 import requests
-from datetime import datetime, time
+from dateutil import parser
+from datetime import datetime
 from dataclasses import dataclass
 from requests.auth import HTTPBasicAuth
-from typing import Optional, List, Dict, Set, Any
+from typing import Optional, List, Dict, Any
 from openhab_pythonrule_engine.cache import Cache
 
 
@@ -34,20 +35,7 @@ class Item:
 
     def get_state_as_datetime(self) -> datetime:
         text = self.get_state_as_text()
-        try:
-            # time_string may be in format 21:30
-            return datetime.strptime(text, '%H:%M')
-        except:
-            try:
-                # time_string may be in format "2017-07-14T21:30:00.000+0200"
-                dt, timezone = text.split(".")
-                return datetime.strptime(dt, '%Y-%m-%dT%H:%M:%S')
-            except:
-                try:
-                    # time_string seems to be in format "2017-07-14T21:30:00"
-                    return datetime.strptime(text, '%Y-%m-%dT%H:%M:%S')
-                except:
-                    return None
+        return datetime.fromtimestamp(parser.parse(text).timestamp())
 
 
 @dataclass
@@ -304,7 +292,7 @@ class ItemRegistry:
     def get_state_as_datetime(self, item_name: str, datetime_string: str="1970-01-01") -> datetime:
         state = self.get_item(item_name)
         if state is None or state.value is None:
-            return datetime.fromisoformat(datetime_string)
+            return datetime.fromtimestamp(parser.parse(datetime_string).timestamp())
         else:
             return state.get_state_as_datetime()
 
