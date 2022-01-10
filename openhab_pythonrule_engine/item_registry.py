@@ -313,7 +313,7 @@ class ItemRegistry:
                 if serialized_old_sate != serialized_new_state:
                     try:
                         self.set_item_state(item_name, serialized_new_state)
-                        logging.debug("set " + item_name + " = " + serialized_new_state + " " + reason)
+                        logging.info("set " + item_name + " = " + serialized_new_state + " " + reason)
                         return True
                     except Exception as e:
                         logging.warning("could not set " + item_name + " = " + serialized_new_state, e)
