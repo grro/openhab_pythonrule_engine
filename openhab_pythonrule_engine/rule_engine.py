@@ -265,7 +265,6 @@ class RuleEngine:
         triggers: List[ItemTrigger] = self.__trigger_registry.get_triggers_by_type(ItemTrigger)
         item_event = parse_item_event(event)
         if item_event is not None:
-            print(item_event)
             matching_triggers = [trigger for trigger in triggers if trigger.matches(item_event)]
             for item_changed_trigger in matching_triggers:
                 item_changed_trigger.invoke(ItemRegistry.instance())
