@@ -67,6 +67,8 @@ class TextItem(Item):
             return "ON" if value_to_serialize else "OFF"
         elif type(value_to_serialize) == datetime:
             return value_to_serialize.strftime('%Y-%m-%dT%H:%M:%S')
+        elif type(value_to_serialize) == int:
+            return str(float(value_to_serialize))
         else:
             return str(value_to_serialize)
 
