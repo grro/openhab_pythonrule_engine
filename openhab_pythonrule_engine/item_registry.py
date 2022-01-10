@@ -299,7 +299,7 @@ class ItemRegistry:
             return state.get_state_as_datetime()
 
 
-    def set_state(self, item_name: str, new_state) -> bool:
+    def set_state(self, item_name: str, new_state, reason: str = "") -> bool:
         if new_state is None:
             logging.warning("try to set " + item_name + " = None. ignoring it")
         else:
@@ -313,7 +313,7 @@ class ItemRegistry:
                 if serialized_old_sate != serialized_new_state:
                     try:
                         self.set_item_state(item_name, serialized_new_state)
-                        logging.debug("set " + item_name + " = " + serialized_new_state)
+                        logging.debug("set " + item_name + " = " + serialized_new_state + " " + reason)
                         return True
                     except Exception as e:
                         logging.warning("could not set " + item_name + " = " + serialized_new_state, e)
