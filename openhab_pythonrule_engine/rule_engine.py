@@ -64,7 +64,7 @@ class CronScheduler:
 
     def remove_jobs(self, module: str):
         if module in self.cron_trigger_by_module.keys():
-            logging.info("removing all " + str(len(self.cron_trigger_by_module[module])) + " crons of '" + module + "'")
+            logging.info("removing all " + str(len(self.cron_trigger_by_module[module])) + " cron jobs of '" + module + "'")
             del self.cron_trigger_by_module[module]
 
     def __process(self):

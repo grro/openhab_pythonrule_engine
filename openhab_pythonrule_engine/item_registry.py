@@ -1,5 +1,6 @@
-import logging
 import requests
+import logging
+from logging import INFO
 from dateutil import parser
 from datetime import datetime
 from dataclasses import dataclass
@@ -299,7 +300,7 @@ class ItemRegistry:
             return state.get_state_as_datetime()
 
 
-    def set_state(self, item_name: str, new_state, reason: str = "", suppress_log: bool = False) -> bool:
+    def set_state(self, item_name: str, new_state, reason: str = "", log_level: int = INFO) -> bool:
         if new_state is None:
             logging.warning("try to set " + item_name + " = None. ignoring it")
         else:
@@ -313,8 +314,7 @@ class ItemRegistry:
                 if serialized_old_sate != serialized_new_state:
                     try:
                         self.set_item_state(item_name, serialized_new_state)
-                        if not suppress_log:
-                            logging.info("set " + item_name + " = " + serialized_new_state + " " + reason)
+                        logging.log(log_level, "set " + item_name + " = " + serialized_new_state + " " + reason)
                         return True
                     except Exception as e:
                         logging.warning("could not set " + item_name + " = " + serialized_new_state, e)
