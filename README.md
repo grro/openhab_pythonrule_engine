@@ -21,11 +21,11 @@ By doing this the rule engine will be started automatically on boot. Starting th
 sudo pyrule --command register --openhab_uri http://localhost:8080 --python_rule_directory /etc/openhab2/automation/rules/python --user me --pwd secret
 ```  
 
-Please consider that the [OpenHAB username/password auhentication](https://www.openhab.org/docs/configuration/restdocs.html) (basic authentication) needs to 
-be enabled in the org.openhab.restauth settings
+**Please consider that the [OpenHAB username/password auhentication](https://www.openhab.org/docs/configuration/restdocs.html) (basic authentication) needs to 
+be enabled in the org.openhab.restauth settings**
 
 
-** Rules **
+**Rules**
 To trigger a rule methode the @when decorator will be used. Currently
  * Cron expressions are supported as well as
  * Item change trigger 
