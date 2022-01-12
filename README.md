@@ -1,8 +1,13 @@
 # OpenHab python rule engine
 A python 3.x rule engine for OpenHAB. This rule engine allows defining rule by using python 3.x. 
 
-To run this software you may use [PIP](https://realpython.com/what-is-pip/) package manager such as shown below
 
+To run this software you may use Docker or [PIP](https://realpython.com/what-is-pip/) package manager such as shown below
+
+**Docker approach**
+```
+sudo docker run -e openhab_uri=http://192.168.1.17:8080 -e user=me -e pwd=secret -v /etc/openhab2/automation/rules/python:/rules grro/pythonrule_engine 
+```
 
 **PIP approach**
 ```
@@ -26,6 +31,7 @@ be enabled in the org.openhab.restauth settings**
 
 
 **Rules**
+
 To trigger a rule methode the @when decorator will be used. Currently
  * Cron expressions are supported as well as
  * Item change trigger 
