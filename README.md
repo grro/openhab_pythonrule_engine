@@ -1,4 +1,4 @@
-# OpenHab python rule engine
+# OpenHAB python rule engine
 A python 3.x rule engine for OpenHAB. This rule engine allows defining rule by using python 3.x. 
 
 **Please consider that the [OpenHAB username/password auhentication](https://www.openhab.org/docs/configuration/restdocs.html) (basic authentication) needs to
@@ -49,7 +49,7 @@ from openhab_pythonrule_engine.item_registry import ItemRegistry
 @when('Time cron */1 * * * *')  # every 1 minute
 @when('Item PhoneLisaLastSeen changed')
 @when('Item PhoneJoeLastSeen changed')
-def update_persence_based_on_phone_seen(item_registry: ItemRegistry):
+def update_presence_based_on_phone_seen(item_registry: ItemRegistry):
     last_time_present = item_registry.get_state_as_datetime('LastDateTimePresence')
     for phone_name in item_registry.get_group_membernames('Phones'):
         last_seen = item_registry.get_state_as_datetime(phone_name)
