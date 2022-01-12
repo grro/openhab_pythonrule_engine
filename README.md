@@ -1,6 +1,9 @@
 # OpenHab python rule engine
 A python 3.x rule engine for OpenHAB. This rule engine allows defining rule by using python 3.x. 
 
+**Please consider that the [OpenHAB username/password auhentication](https://www.openhab.org/docs/configuration/restdocs.html) (basic authentication) needs to
+be enabled in the org.openhab.restauth settings**
+
 
 To run this software you may use Docker or [PIP](https://realpython.com/what-is-pip/) package manager such as shown below
 
@@ -25,9 +28,6 @@ By doing this the rule engine will be started automatically on boot. Starting th
 ```
 sudo pyrule --command register --openhab_uri http://localhost:8080 --python_rule_directory /etc/openhab2/automation/rules/python --user me --pwd secret
 ```  
-
-**Please consider that the [OpenHAB username/password auhentication](https://www.openhab.org/docs/configuration/restdocs.html) (basic authentication) needs to 
-be enabled in the org.openhab.restauth settings**
 
 
 **Rules**
