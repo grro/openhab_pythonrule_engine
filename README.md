@@ -38,7 +38,7 @@ To trigger a rule methode the **@when** decorator has to be used. Currently, the
 |---|---|---|
 | *cron* | @when('Time cron */1 * * * *') | fires based on cron expression |
 | *item state change* | @when('Item PhoneLisaLastSeen changed')  | fires when the specified Item's State changes |
-| *item command* | @when('Item Select_Door_Cam received command ON') <br/> @when('Item Select_Door_Cam received command OFF') | fires when the specified Item receives a Command |
+| *item command* | @when('Item SelectDoorCam received command ON') <br/> @when('Item SelectDoorCam received command OFF') | fires when the specified Item receives a Command |
  
 
 Example: **my_rule.py** (located within /etc/openhab2/automation/rules/python)
