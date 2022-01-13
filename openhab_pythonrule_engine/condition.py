@@ -27,15 +27,17 @@ def when(target: str):
             return function
         return decorated_method
 
-    elif target.lower().startswith("item") and target.lower().endswith(" received command"):
+    elif target.lower().startswith("item") and (target.lower().endswith(" received command on") or target.lower().endswith(" received command off")):
         itemname_operation_pair = target[len("item"):].strip()
         itemname = itemname_operation_pair[:itemname_operation_pair.index(" ")].strip()
 
         if ItemRegistry.instance().has_item(itemname):
             operation = itemname_operation_pair[itemname_operation_pair.index(" "):].strip()
+            operation = operation[len("received "):].strip().lower()
 
             def decorated_method(function):
-                trigger = ItemReceivedCommandTrigger(itemname, target, function)
+
+                trigger = ItemReceivedCommandTrigger(itemname, operation, target, function)
                 RuleEngine.instance().add_trigger(trigger)
                 return function
 

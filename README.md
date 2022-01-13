@@ -2,7 +2,7 @@
 A python 3.x rule engine for OpenHAB. This rule engine allows defining rule by using python 3.x. 
 
 **Please consider that the [OpenHAB username/password auhentication](https://www.openhab.org/docs/configuration/restdocs.html) (basic authentication) needs to
-be enabled**
+be enabled**. To do this, go to [API security settings](doc/api_settings.png) and activate advanced setting [Allow Basic Authentication](doc/basic_auth.png).   
 
 
 To run this software you may use Docker or [PIP](https://realpython.com/what-is-pip/) package manager such as shown below
@@ -32,13 +32,14 @@ sudo pyrule --command register --openhab_uri http://localhost:8080 --python_rule
 
 **Rules**
 
-To trigger a rule methode the @when decorator will be used. Currently
- * Cron expressions are supported as well as
- * Item change trigger 
-as shown below 
+To trigger a rule methode the **@when** decorator has to be used. Currently, the conditions listed below are supported
+
+| condition  | example | description  |
+|---|---|---|
+| *cron* | Time cron */1 * * * * | fires based on cron expression |
+| *item state change* | Item PhoneLisaLastSeen changed  | fires when the specified Item's State changes |
+| *item command* | Item Select_Door_Cam received command ON <br/> Item Select_Door_Cam received command OFF | fires when the specified Item receives a Command |
  
-If the method defines a (single!) argument, the item_registry object will be injected automatically. The item_registry cann be used 
-to get item state as well as to update item state. By setting the state the data value will be auto converted into the item specific data type 
 
 Example: **my_rule.py** (located within /etc/openhab2/automation/rules/python)
 ```python
@@ -57,3 +58,6 @@ def update_presence_based_on_phone_seen(item_registry: ItemRegistry):
             last_time_present = last_seen
     item_registry.set_state('LastDateTimePresence', last_time_present)
 ```
+
+If the rule method defines a (single!) argument, the item_registry object will be injected automatically. The item_registry cann be used
+to get item state as well as to update item state. By setting the state the data value will be auto converted into the item specific data type 

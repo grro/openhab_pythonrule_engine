@@ -1,3 +1,4 @@
+import json
 import logging
 from abc import ABC
 from datetime import datetime
@@ -99,12 +100,18 @@ class ItemTrigger(Trigger):
 
 class ItemReceivedCommandTrigger(ItemTrigger):
 
-    def __init__(self, item_name: str, expression: str, func):
+    def __init__(self, item_name: str, command: str, expression: str, func):
         self.item_name = item_name
+        self.command = command
         super().__init__(expression, func)
 
     def matches(self, item_event: ItemEvent) -> bool:
-        return item_event.item_name == self.item_name and item_event.operation == 'command'
+        if item_event.item_name == self.item_name and item_event.operation.lower() == 'command':
+            js = json.loads(item_event.payload)
+            if js.get('type', '') == 'OnOff':
+                op = js.get('value', '')
+                return ('command ' + op).lower() == self.command
+        return False
 
 
 class ItemChangedTrigger(ItemTrigger):

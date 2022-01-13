@@ -17,6 +17,7 @@ logging = logging.getLogger(__name__)
 class ItemEvent:
     item_name: str
     operation: str
+    payload: str
 
 
 def parse_item_event(event) -> Optional[ItemEvent]:
@@ -27,7 +28,7 @@ def parse_item_event(event) -> Optional[ItemEvent]:
             if parts[1] == 'items':
                 item_name = parts[2]
                 operation = parts[3]
-                return ItemEvent(item_name, operation)
+                return ItemEvent(item_name, operation, event.get("payload", ""))
         except Exception as e:
             logging.warning("Error occurred by handling event " + str(event), e)
     return None
