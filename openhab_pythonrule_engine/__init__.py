@@ -36,7 +36,7 @@ WantedBy=multi-user.target
 class InternetApp(App):
 
     def do_add_argument(self, parser):
-        parser.add_argument('--openhab_uri', metavar='openhab_uri', required=True, type=str, default="http://localhost:8080", help='the openhab uri such as http://localhost:8080')
+        parser.add_argument('--openhab_uri', metavar='openhab_uri', required=False, type=str, default="http://localhost:8080", help='the openhab uri such as http://localhost:8080')
         parser.add_argument('--python_rule_directory', metavar='python_rule_directory', required=False, type=str, default="/etc/openhab/automation/rules/python", help='the python_rule_directory such as /etc/openhab/automation/rules/python')
         parser.add_argument('--user', metavar='user', required=False, type=str, default="anonymous", help='the user name')
         parser.add_argument('--pwd', metavar='pwd', required=False, type=str, default="anonymous", help='the password')
