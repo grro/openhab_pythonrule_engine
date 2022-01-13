@@ -2,7 +2,7 @@
 A python 3.x rule engine for OpenHAB. This rule engine allows defining rule by using python 3.x. 
 
 **Please consider that the [OpenHAB username/password auhentication](https://www.openhab.org/docs/configuration/restdocs.html) (basic authentication) needs to
-be enabled**. To do this, go to [API security settings](doc/api_settings.png) and activate advanced setting [Allow Basic Authentication](doc/basic_auth.png).   
+be enabled**. To do this, open [API security settings](doc/api_settings.png) and activate advanced setting [Allow Basic Authentication](doc/basic_auth.png).   
 
 
 To run this software you may use Docker or [PIP](https://realpython.com/what-is-pip/) package manager such as shown below
