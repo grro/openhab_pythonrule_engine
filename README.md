@@ -52,10 +52,11 @@ from openhab_pythonrule_engine.item_registry import ItemRegistry
 @when('Item PhoneJoeLastSeen changed')
 def update_presence_based_on_phone_seen(item_registry: ItemRegistry):
     newest_last_seen = max([item_registry.get_state_as_datetime(phone_last_seen_itemname) for phone_last_seen_itemname in item_registry.get_group_membernames("Phones")])
-    if newest_last_seen > item_registry.get_state_as_datetime("LastDateTimePresence"):
-        item_registry.set_state("LastDateTimePresence", newest_last_seen)
+    if newest_last_seen > item_registry.get_state_as_datetime('LastDateTimePresence'):
+        item_registry.set_state('LastDateTimePresence', newest_last_seen)
    
 ```
 
-If the rule method defines a (single!) argument, the item_registry object will be injected automatically. The item_registry cann be used
-to get item state as well as to update item state. By setting the state the data value will be auto converted into the item specific data type 
+If the rule method defines a (single!) argument, the item_registry object will be injected automatically. 
+The item_registry provides methods to get and set the item state. By setting the state the data value will be 
+auto converted into the item specific data type 
