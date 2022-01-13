@@ -24,7 +24,7 @@ sudo pyrule --command listen --openhab_uri http://localhost:8080 --python_rule_d
 Here, the rule engine will connect the openhab instance running on the local machine on port 8080. Furthermore, the directory /etc/openhab2/automation/rules/python will be used to scan for python-based rules
 
 By running a *systemd-based Linux distribution* you may use the *register* command to register and start the rule engine as systemd unit.
-By doing this the rule engine will be started automatically on boot. Starting the server manually using the *listen* command is no longer necessary.
+By doing this the rule engine will be started automatically on boot. Starting the rule engine manually using the *listen* command is no longer necessary.
 ```
 sudo pyrule --command register --openhab_uri http://localhost:8080 --python_rule_directory /etc/openhab2/automation/rules/python --user me --pwd secret
 ```  
@@ -36,9 +36,9 @@ To trigger a rule methode the **@when** decorator has to be used. Currently, the
 
 | condition  | example | description  |
 |---|---|---|
-| *cron* | Time cron */1 * * * * | fires based on cron expression |
-| *item state change* | Item PhoneLisaLastSeen changed  | fires when the specified Item's State changes |
-| *item command* | Item Select_Door_Cam received command ON <br/> Item Select_Door_Cam received command OFF | fires when the specified Item receives a Command |
+| *cron* | @when('Time cron */1 * * * *') | fires based on cron expression |
+| *item state change* | @when('Item PhoneLisaLastSeen changed')  | fires when the specified Item's State changes |
+| *item command* | @when('Item Select_Door_Cam received command ON') <br/> @when('Item Select_Door_Cam received command OFF') | fires when the specified Item receives a Command |
  
 
 Example: **my_rule.py** (located within /etc/openhab2/automation/rules/python)
