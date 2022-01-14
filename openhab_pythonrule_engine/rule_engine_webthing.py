@@ -27,7 +27,7 @@ class RuleEngineThing(Thing):
                      metadata={
                          'title': 'last_events',
                          'type': 'string',
-                         'description': 'the line break separator newest event',
+                         'description': 'the line break delimited newest events',
                          'readOnly': True
                      }))
 
@@ -39,7 +39,7 @@ class RuleEngineThing(Thing):
                      metadata={
                          'title': 'last_crons',
                          'type': 'string',
-                         'description': 'the line break separator newest cron execution',
+                         'description': 'the line break delimited newest cron executions',
                          'readOnly': True
                      }))
 
@@ -63,7 +63,7 @@ class RuleEngineThing(Thing):
 
 def run_server(port: int, description: str, rule_engine: RuleEngine):
     rule_engine_webthing = RuleEngineThing(description, rule_engine)
-    server = WebThingServer(SingleThing(rule_engine_webthing, 'rule_engine'), port=port, disable_host_validation=True)
+    server = WebThingServer(SingleThing(rule_engine_webthing), port=port, disable_host_validation=True)
 
     try:
         # start webthing server
