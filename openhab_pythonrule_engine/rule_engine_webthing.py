@@ -50,13 +50,13 @@ class RuleEngineThing(Thing):
         self.ioloop.add_callback(self.__handle_event)
 
     def __handle_event(self):
-        self.last_events.notify_of_external_update('\r\n').join(self.rule_engine.last_events)
+        self.last_events.notify_of_external_update('\r\n'.join(self.rule_engine.last_events))
 
     def on_cron(self):
         self.ioloop.add_callback(self.__handle_cron)
 
     def __handle_cron(self):
-        self.last_crons.notify_of_external_update('\r\n').join(self.rule_engine.last_crons)
+        self.last_crons.notify_of_external_update('\r\n'.join(self.rule_engine.last_crons))
 
 
 
