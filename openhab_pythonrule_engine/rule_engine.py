@@ -94,7 +94,10 @@ class CronScheduler:
                             while len(self.__last_crons) > 20:
                                 self.__last_crons.pop(0)
                             for listener in self.__cron_listeners:
-                                listener()
+                                try:
+                                    listener()
+                                except Exception as e:
+                                    logging.warning("Error occurred by calling listener " + str(listener), e)
             except Exception as e:
                 logging.warning("Error occurred by executing cron", e)
             sleep(60)  # minimum 60 sec!
@@ -306,7 +309,10 @@ class RuleEngine:
         while len(self.__last_events) > 20:
             self.__last_events.pop(0)
         for listener in self.__event_listeners:
-            listener()
+            try:
+                listener()
+            except Exception as e:
+                logging.warning("Error occurred by calling listener " + str(listener), e)
 
         ItemRegistry.instance().on_event(event)
         triggers: List[ItemTrigger] = self.__trigger_registry.get_triggers_by_type(ItemTrigger)
@@ -323,9 +329,11 @@ class RuleEngine:
                 self.__last_handled_events.append("[" + datetime.now().strftime("%Y-%m-%dT%H:%M:%S") + "] " + item_changed_trigger.expression + " -> " + item_changed_trigger.module + "." + item_changed_trigger.name + (" " if error is None else "(" + str(error) + ")"))
                 while len(self.__last_handled_events) > 20:
                     self.__last_handled_events.pop(0)
-                for listener in self.__last_handled_events:
-                    listener()
-
+                for listener in self.__event_listeners:
+                    try:
+                        listener()
+                    except Exception as e:
+                        logging.warning("Error occurred by calling listener " + str(listener), e)
 
     @property
     def rules(self) -> List[Rule]:
