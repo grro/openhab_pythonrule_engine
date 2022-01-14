@@ -31,6 +31,18 @@ class RuleEngineThing(Thing):
                          'readOnly': True
                      }))
 
+        self.last_handled_events = Value("")
+        self.add_property(
+            Property(self,
+                     'last_handled_events',
+                     self.last_handled_events,
+                     metadata={
+                         'title': 'last_handled_events',
+                         'type': 'string',
+                         'description': 'the line break delimited newest handled events',
+                         'readOnly': True
+                     }))
+
         self.last_crons = Value("")
         self.add_property(
             Property(self,
@@ -51,6 +63,7 @@ class RuleEngineThing(Thing):
 
     def __handle_event(self):
         self.last_events.notify_of_external_update('\r\n'.join(self.rule_engine.last_events))
+        self.last_handled_events.notify_of_external_update('\r\n'.join(self.rule_engine.last_handled_events))
 
     def on_cron(self):
         self.ioloop.add_callback(self.__handle_cron)

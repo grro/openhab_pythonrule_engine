@@ -90,7 +90,7 @@ class CronScheduler:
                             except Exception as e:
                                 logging.warning("Error occurred by executing rule " + cron_trigger.name, e)
                                 error = e
-                            self.__last_crons.append("[" + datetime.now().strftime("%Y-%m-%dT%H:%M:%S") + "] " + cron_trigger.cron + " -> " + cron_trigger.module + "." + cron_trigger.name + (" " if error is None else "(" + str(e) + ")"))
+                            self.__last_crons.append("[" + datetime.now().strftime("%Y-%m-%dT%H:%M:%S") + "] " + cron_trigger.cron + " -> " + cron_trigger.module + "." + cron_trigger.name + (" " if error is None else "(" + str(error) + ")"))
                             while len(self.__last_crons) > 20:
                                 self.__last_crons.pop(0)
                             for listener in self.__cron_listeners:
@@ -215,6 +215,7 @@ class RuleEngine:
         self.__listeners = set()
         self.__event_listeners = set()
         self.__last_events = []
+        self.__last_handled_events = []
         self.python_rule_directory = python_rule_directory
         logging.info("connecting " + openhab_uri)
         ItemRegistry.new_singleton(openhab_uri, user, pwd)
@@ -234,6 +235,10 @@ class RuleEngine:
     @property
     def last_events(self) -> List[str]:
         return self.__last_events
+
+    @property
+    def last_handled_events(self) -> List[str]:
+        return self.__last_handled_events
 
     @property
     def last_crons(self) -> List[str]:
@@ -309,7 +314,18 @@ class RuleEngine:
         if item_event is not None:
             matching_triggers = [trigger for trigger in triggers if trigger.matches(item_event)]
             for item_changed_trigger in matching_triggers:
-                item_changed_trigger.invoke(ItemRegistry.instance())
+                error = None
+                try:
+                    item_changed_trigger.invoke(ItemRegistry.instance())
+                except Exception as e:
+                    logging.warning("Error occurred by executing rule " + item_changed_trigger.name, e)
+                    error = e
+                self.__last_handled_events.append("[" + datetime.now().strftime("%Y-%m-%dT%H:%M:%S") + "] " + item_changed_trigger.expression + " -> " + item_changed_trigger.module + "." + item_changed_trigger.name + (" " if error is None else "(" + str(error) + ")"))
+                while len(self.__last_handled_events) > 20:
+                    self.__last_handled_events.pop(0)
+                for listener in self.__last_handled_events:
+                    listener()
+
 
     @property
     def rules(self) -> List[Rule]:
