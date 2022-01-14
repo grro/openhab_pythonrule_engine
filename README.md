@@ -47,14 +47,18 @@ from openhab_pythonrule_engine.condition import when
 from openhab_pythonrule_engine.item_registry import ItemRegistry
 
 
-@when('Time cron */1 * * * *')  # every 1 minute
-@when('Item PhoneLisaLastSeen changed')
-@when('Item PhoneJoeLastSeen changed')
+
+@when("Time cron */1 * * * *") # each minute
+@when("Item PhoneLisaLastSeen changed")
+@when("Item PhoneTimLastSeen changed")
 def update_presence_based_on_phone_seen(item_registry: ItemRegistry):
-    newest_last_seen = max([item_registry.get_state_as_datetime(phone_last_seen_itemname) for phone_last_seen_itemname in item_registry.get_group_membernames("Phones")])
-    if newest_last_seen > item_registry.get_state_as_datetime('LastDateTimePresence'):
-        item_registry.set_state('LastDateTimePresence', newest_last_seen)
-   
+    last_time_present = item_registry.get_state_as_datetime('LastDateTimePresence')
+    for phone_name in item_registry.get_group_membernames('Phones'):
+        last_seen = item_registry.get_state_as_datetime(phone_name)
+        print(last_seen)
+        if last_seen > last_time_present:
+            last_time_present = last_seen
+    item_registry.set_state('LastDateTimePresence', last_time_present)
 ```
 
 If the rule method defines a (single!) argument, the item_registry object will be injected automatically. 

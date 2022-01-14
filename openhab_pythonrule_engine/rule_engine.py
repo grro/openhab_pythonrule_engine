@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import sys
@@ -53,9 +54,18 @@ class FileSystemListener(FileSystemEventHandler):
 class CronScheduler:
 
     def __init__(self):
+        self.__cron_listeners = set()
+        self.__last_crons = []
         self.cron_trigger_by_module = {}
         self.__is_running = True
         self.thread = Thread(target=self.__process, daemon=True)
+
+    @property
+    def last_crons(self) -> List[str]:
+        return self.__last_crons
+
+    def add_cron_listener(self, listener):
+        self.__cron_listeners.add(listener)
 
     def add_job(self, cron_trigger: CronTrigger):
         cron_triggers = self.cron_trigger_by_module.get(cron_trigger.module, set())
@@ -70,13 +80,23 @@ class CronScheduler:
     def __process(self):
         logging.info("cron scheduler started")
         while self.__is_running:
-            for cron_triggers in list(self.cron_trigger_by_module.values()):
-                for cron_trigger in list(cron_triggers):
-                    if pycron.is_now(cron_trigger.cron):
-                        try:
-                            cron_trigger.invoke(ItemRegistry.instance())
-                        except Exception as e:
-                            logging.warning("Error occurred by executing rule " + cron_trigger.name, e)
+            try:
+                for cron_triggers in list(self.cron_trigger_by_module.values()):
+                    for cron_trigger in list(cron_triggers):
+                        if pycron.is_now(cron_trigger.cron):
+                            error = None
+                            try:
+                                cron_trigger.invoke(ItemRegistry.instance())
+                            except Exception as e:
+                                logging.warning("Error occurred by executing rule " + cron_trigger.name, e)
+                                error = e
+                            self.__last_crons.append("[" + datetime.now().strftime("%Y-%m-%dT%H:%M:%S") + "] " + cron_trigger.cron + " -> " + cron_trigger.module + "." + cron_trigger.name + (" " if error is None else "(" + str(e) + ")"))
+                            while len(self.__last_crons) > 20:
+                                self.__last_crons.pop(0)
+                            for listener in self.__cron_listeners:
+                                listener()
+            except Exception as e:
+                logging.warning("Error occurred by executing cron", e)
             sleep(60)  # minimum 60 sec!
 
     def start(self):
@@ -193,6 +213,8 @@ class RuleEngine:
 
     def __init__(self, openhab_uri:str, python_rule_directory: str, user: str, pwd: str):
         self.__listeners = set()
+        self.__event_listeners = set()
+        self.__last_events = []
         self.python_rule_directory = python_rule_directory
         logging.info("connecting " + openhab_uri)
         ItemRegistry.new_singleton(openhab_uri, user, pwd)
@@ -202,6 +224,20 @@ class RuleEngine:
 
     def add_listener(self, listener):
         self.__listeners.add(listener)
+
+    def add_event_listener(self, listener):
+        self.__event_listeners.add(listener)
+
+    def add_cron_listener(self, listener):
+        self.__cron_scheduler.add_cron_listener(listener)
+
+    @property
+    def last_events(self) -> List[str]:
+        return self.__last_events
+
+    @property
+    def last_crons(self) -> List[str]:
+        return self.__cron_scheduler.last_crons
 
     def start(self):
         if self.python_rule_directory not in sys.path:
@@ -228,7 +264,7 @@ class RuleEngine:
                 try:
                     listener()
                 except Exception as e:
-                    logging.warning("error occured calling rules lsitener", e)
+                    logging.warning("error occurred calling rules listener", e)
 
     def load_module(self, filename: str):
         if filename.endswith(".py"):
@@ -261,6 +297,12 @@ class RuleEngine:
         return filename[:-3]
 
     def on_event(self, event):
+        self.__last_events.append("[" + datetime.now().strftime("%Y-%m-%dT%H:%M:%S") + "] " + json.dumps(event, indent=0))
+        while len(self.__last_events) > 20:
+            self.__last_events.pop(0)
+        for listener in self.__event_listeners:
+            listener()
+
         ItemRegistry.instance().on_event(event)
         triggers: List[ItemTrigger] = self.__trigger_registry.get_triggers_by_type(ItemTrigger)
         item_event = parse_item_event(event)
@@ -268,7 +310,6 @@ class RuleEngine:
             matching_triggers = [trigger for trigger in triggers if trigger.matches(item_event)]
             for item_changed_trigger in matching_triggers:
                 item_changed_trigger.invoke(ItemRegistry.instance())
-
 
     @property
     def rules(self) -> List[Rule]:

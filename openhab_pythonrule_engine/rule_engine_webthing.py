@@ -1,117 +1,69 @@
-from webthing import (Value, Property, Thing, MultipleThings, WebThingServer)
+from webthing import (Value, Property, Thing, SingleThing, WebThingServer)
 import tornado.ioloop
 import logging
 from openhab_pythonrule_engine.rule_engine import RuleEngine, Rule
 
 
-class RuleThing(Thing):
+class RuleEngineThing(Thing):
 
-    def __init__(self, description: str, rule: Rule):
+    def __init__(self, description: str, rule_engine: RuleEngine):
         Thing.__init__(
             self,
-            'urn:dev:ops:pythonrule-1',
+            'urn:dev:ops:pythonrule_engine-1',
             'python_rule',
             [],
             description
         )
 
-        self.rule = rule
-        rule.add_listener(self.on_rule_executed)
+        self.rule_engine = rule_engine
+        rule_engine.add_event_listener(self.on_event)
+        rule_engine.add_cron_listener(self.on_cron)
 
-        self.name = Value(rule.module + "." + rule.name)
+        self.last_events = Value("")
         self.add_property(
             Property(self,
-                     'name',
-                     self.name,
+                     'last_events',
+                     self.last_events,
                      metadata={
-                         'title': 'name',
+                         'title': 'last_events',
                          'type': 'string',
-                         'description': 'the rule name',
+                         'description': 'the line break separator newest event',
                          'readOnly': True
                      }))
 
-        self.triggers = Value(", " .join([trigger.expression for trigger in rule.triggers]))
+        self.last_crons = Value("")
         self.add_property(
             Property(self,
-                     'triggers',
-                     self.triggers,
+                     'last_crons',
+                     self.last_crons,
                      metadata={
-                         'title': 'Last assigned triggers',
+                         'title': 'last_crons',
                          'type': 'string',
-                         'description': 'The comma-separated trigger names',
-                         'readOnly': True,
-                     }))
-
-        self.execute = Value(False, self.__execute)
-        self.add_property(
-            Property(self,
-                     'execute',
-                     self.name,
-                     metadata={
-                         '@type': 'BooleanProperty',
-                         'title': 'execute',
-                         'type': 'boolean',
-                         'description': 'triggers the rule manually',
-                         'readOnly': False
-                     }))
-
-        self.history = Value("\r\n" .join([str(execution) for execution in rule.last_executions]))
-        self.add_property(
-            Property(self,
-                     'history',
-                     self.history,
-                     metadata={
-                         'title': 'The newest trigger executions',
-                         'type': 'string',
-                         'description': 'The linebreak-separated newest trigger executions',
-                         'readOnly': True,
-                     }))
-
-
-        self.last_execution_date = Value("" if rule.last_execution_date is None else rule.last_execution_date.isoformat())
-        self.add_property(
-        Property(self,
-                 'last_execution_date',
-                 self.last_execution_date,
-                 metadata={
-                     'title': 'Last execution date of the rule',
-                     'type': 'string',
-                     'description': 'The date of the last execution (iso 8601 string)',
-                     'readOnly': True,
-                 }))
-
-        self.last_trigger = Value("" if rule.last_trigger is None else rule.last_trigger.expression)
-        self.add_property(
-            Property(self,
-                     'last_executed_trigger',
-                     self.last_trigger,
-                     metadata={
-                         'title': 'Last executed trigger of this rule',
-                         'type': 'string',
-                         'description': 'The trigger name',
-                         'readOnly': True,
+                         'description': 'the line break separator newest cron execution',
+                         'readOnly': True
                      }))
 
         self.ioloop = tornado.ioloop.IOLoop.current()
 
-    def __execute(self, do_execute: bool):
-        if do_execute:
-            self.rule.execute()
-            self.execute.notify_of_external_update(False)
 
-    def on_rule_executed(self, rule):
-        self.ioloop.add_callback(self.__sync_props)
+    def on_event(self):
+        self.ioloop.add_callback(self.__handle_event)
 
-    def __sync_props(self):
-        self.last_execution_date.notify_of_external_update("" if self.rule.last_execution_date is None else self.rule.last_execution_date.isoformat())
-        self.last_trigger.notify_of_external_update("" if self.rule.last_trigger is None else self.rule.last_trigger.expression)
-        self.triggers.notify_of_external_update(", " .join([trigger.expression for trigger in self.rule.triggers]))
-        self.history.notify_of_external_update("\r\n" .join([str(execution) for execution in self.rule.last_executions]))
+    def __handle_event(self):
+        self.last_events.notify_of_external_update('\r\n').join(self.rule_engine.last_events)
+
+    def on_cron(self):
+        self.ioloop.add_callback(self.__handle_cron)
+
+    def __handle_cron(self):
+        self.last_crons.notify_of_external_update('\r\n').join(self.rule_engine.last_crons)
+
+
 
 
 def run_server(port: int, description: str, rule_engine: RuleEngine):
-    rule_webthings = [RuleThing(description, rule) for rule in rule_engine.rules]
-    server = WebThingServer(MultipleThings(rule_webthings, 'rule'), port=port, disable_host_validation=True)
+    rule_engine_webthing = RuleEngineThing(description, rule_engine)
+    server = WebThingServer(SingleThing(rule_engine_webthing, 'rule_engine'), port=port, disable_host_validation=True)
 
     try:
         # start webthing server
