@@ -9,7 +9,7 @@ from threading import Thread
 from datetime import datetime
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-from typing import List, Set, Optional
+from typing import List, Optional
 from openhab_pythonrule_engine.item_registry import ItemRegistry
 from openhab_pythonrule_engine.trigger import TriggerRegistry, CronTrigger, ItemTrigger, RuleLoadedTrigger, ManualTrigger, Trigger, Execution
 from openhab_pythonrule_engine.eventbus_consumer import EventConsumer, parse_item_event
@@ -208,10 +208,10 @@ class RuleEngine:
         return RuleEngine.__instance
 
     @staticmethod
-    def start_singleton(openhab_uri:str, python_rule_directory: str = "/etc/openhab/automation/rules", user: str = None, pwd: str = None):
+    def start_singleton(openhab_uri:str, python_rule_directory: str = "/etc/openhab/automation/rules", user: str = None, pwd: str = None, background: bool = True):
         rule_engine = RuleEngine(openhab_uri, python_rule_directory, user, pwd)
         RuleEngine.__instance = rule_engine
-        rule_engine.start()
+        rule_engine.start(background)
         return rule_engine
 
     def __init__(self, openhab_uri:str, python_rule_directory: str, user: str, pwd: str):
@@ -247,7 +247,7 @@ class RuleEngine:
     def last_crons(self) -> List[str]:
         return self.__cron_scheduler.last_crons
 
-    def start(self):
+    def start(self, background: bool = True):
         if self.python_rule_directory not in sys.path:
             sys.path.insert(0, self.python_rule_directory)
         for file in os.scandir(self.python_rule_directory):
@@ -255,6 +255,13 @@ class RuleEngine:
         FileSystemListener.start(self)
         self.__cron_scheduler.start()
         self.__event_consumer.start()
+        if not background:
+            logging.info('running rule engine')
+            try:
+                while True:
+                    sleep(5)
+            except KeyboardInterrupt:
+                logging.info('rule engine stopped')
 
     def add_trigger(self, trigger: Trigger):
         rules = self.rules
