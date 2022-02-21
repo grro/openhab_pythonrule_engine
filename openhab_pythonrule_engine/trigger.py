@@ -54,14 +54,17 @@ class Trigger(ABC):
     def name(self) -> str:
         return self.func.__name__
 
+    def fingerprint(self) -> str:
+        return str(self.func) + "/" + self.expression
+
     def __hash__(self):
-        return hash(self.__str__())
+        return hash(self.fingerprint())
 
     def __eq__(self, other):
-        return self.__str__() == other.__str__()
+        return self.fingerprint() == other.fingerprint()
 
     def __lt__(self, other):
-        return self.__str__() < other.__str__()
+        return self.fingerprint() < other.fingerprint()
 
     def __str__(self):
         return self.expression
