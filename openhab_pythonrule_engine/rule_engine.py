@@ -14,6 +14,7 @@ from openhab_pythonrule_engine.item_registry import ItemRegistry
 from openhab_pythonrule_engine.trigger import TriggerRegistry, CronTrigger, ItemTrigger, RuleLoadedTrigger, ManualTrigger, Trigger, Execution
 from openhab_pythonrule_engine.eventbus_consumer import EventConsumer, parse_item_event
 
+#logging.basicConfig(format='%(asctime)s %(name)-20s: %(levelname)-8s %(message)s', level="DEBUG", datefmt='%Y-%m-%d %H:%M:%S')
 
 logging = logging.getLogger(__name__)
 
@@ -348,3 +349,6 @@ class RuleEngine:
                         rule.add_trigger(trigger)
                 rules.add(rule)
         return sorted(list(rules))
+
+#RuleEngine.start_singleton("http://192.168.1.27:8080", "C:\\workspace\\test", "xxx", "secret")
+#sleep(10000)

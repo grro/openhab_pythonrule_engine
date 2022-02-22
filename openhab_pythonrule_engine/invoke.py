@@ -17,7 +17,7 @@ class Invoker():
     def __init__(self, func, type: str):
         self.__func = func
         self.name = func.__name__
-        self.fullname = func.__module__ + "." + self.name
+        self.fullname = func.__module__ + "#" + self.name
         self.__type = type
 
     @staticmethod
@@ -39,7 +39,10 @@ class Invoker():
         return Invoker(func, type)
 
     def invoke(self, item_registry: ItemRegistry):
-        if self.__type ==  self.TYPE_SINGLE_PARAM_ITEMREGISTRY:
-            self.__func(item_registry)
-        else:
-            self.__func()
+        try:
+            if self.__type ==  self.TYPE_SINGLE_PARAM_ITEMREGISTRY:
+                self.__func(item_registry)
+            else:
+                self.__func()
+        except Exception as e:
+            raise Exception("Error occurred executing function " + self.fullname+ "(...)") from e
