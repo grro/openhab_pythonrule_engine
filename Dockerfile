@@ -1,5 +1,4 @@
 FROM python:3.9
-#FROM python:3.9.1-alpine
 
 ENV openhab_uri "http://localhost:8080"
 ENV python_rule_directory "/rules"

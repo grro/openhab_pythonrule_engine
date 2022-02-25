@@ -58,7 +58,6 @@ def update_presence_based_on_phone_seen(item_registry: ItemRegistry):
         if last_seen > last_time_present:
             last_time_present = last_seen
     item_registry.set_state('LastDateTimePresence', last_time_present)
-
     
 # uncomment the code below for local debugging
 #item_registry = ItemRegistry.new_singleton(openhab_uri="http://192.168.1.27:8080/", user="xxx", pwd="secret")

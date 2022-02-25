@@ -14,7 +14,7 @@ from openhab_pythonrule_engine.item_registry import ItemRegistry
 from openhab_pythonrule_engine.trigger import TriggerRegistry, CronTrigger, ItemTrigger, RuleLoadedTrigger, ManualTrigger, Trigger, Execution
 from openhab_pythonrule_engine.eventbus_consumer import EventConsumer, parse_item_event
 
-#logging.basicConfig(format='%(asctime)s %(name)-20s: %(levelname)-8s %(message)s', level="DEBUG", datefmt='%Y-%m-%d %H:%M:%S')
+#logging.basicConfig(format='%(asctime)s %(name)-20s: %(levelname)-8s %(message)s', level="INFO", datefmt='%Y-%m-%d %H:%M:%S')
 
 logging = logging.getLogger(__name__)
 
