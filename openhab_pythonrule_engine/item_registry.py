@@ -230,8 +230,10 @@ class ItemRegistry:
                 return to_item(data)
             elif response.status_code == 404:
                 raise Exception("item " +   uri + " not exists " + response.text)
+            elif response.status_code == 401:
+                raise Exception("auth error. user=" + self.credentials.username)
             else:
-                raise Exception("could not read item state " +   uri +  " got error " + response.text)
+                raise Exception("could not read item state " +  uri +  " got error " + response.text)
         except Exception as e:
             logging.warning("error occurred by calling " + uri, e)
 
@@ -252,6 +254,8 @@ class ItemRegistry:
                 return
             elif response.status_code == 404:
                 raise Exception("item " +   uri + " not exists " + response.text)
+            elif response.status_code == 401:
+                raise Exception("auth error. user=" + self.credentials.username)
             else:
                 raise Exception("could not update item state " +   uri +  " got error " + response.text)
         except Exception as e:
@@ -295,7 +299,7 @@ class ItemRegistry:
     def get_state_as_datetime(self, item_name: str, datetime_string: str="1970-01-01") -> datetime:
         state = self.get_item(item_name)
         if state is None or state.value is None:
-            return datetime.fromtimestamp(parser.parse(datetime_string).timestamp())
+            return parser.parse(datetime_string)
         else:
             return state.get_state_as_datetime()
 

@@ -350,5 +350,5 @@ class RuleEngine:
                 rules.add(rule)
         return sorted(list(rules))
 
-#RuleEngine.start_singleton("http://192.168.1.27:8080", "C:\\workspace\\test", "xxx", "secret")
+#RuleEngine.start_singleton("http://192.168.1.27:8080", "C:\\workspace\\test", "test", "test")
 #sleep(10000)
