@@ -195,7 +195,7 @@ class ItemRegistry:
 
     def on_event(self, event):
         if event.get("type", "") == "ThingUpdatedEvent":
-            logging.info("config change. reset cache")
+            logging.debug("config change. reset cache")
             self.cache.clear()
 
     def get_items(self, use_cache: bool = False) -> Dict[str, Item]:
