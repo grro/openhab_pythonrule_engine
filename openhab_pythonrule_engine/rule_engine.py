@@ -260,7 +260,7 @@ class RuleEngine:
     def add_trigger(self, trigger: Trigger):
         rules = self.rules
         if trigger.is_valid():
-            logging.info(" * " + trigger.name + "(...): register trigger '" + trigger.expression + "'")
+            logging.info(" * " + trigger.name + "(...): trigger '" + trigger.expression + "' has been registered")
             self.__trigger_registry.register(trigger)
             if isinstance(trigger, CronTrigger):
                 self.__cron_scheduler.add_job(trigger)
@@ -350,5 +350,5 @@ class RuleEngine:
                 rules.add(rule)
         return sorted(list(rules))
 
-#RuleEngine.start_singleton("http://192.168.1.27:8080", "C:\\workspace\\test", "test", "test")
+#RuleEngine.start_singleton("http://192.168.1.27:8080", "C:\\workspace\\test", sys.argv[1], sys.argv[2])
 #sleep(10000)
