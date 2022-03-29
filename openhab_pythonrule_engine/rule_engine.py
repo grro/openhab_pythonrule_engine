@@ -281,12 +281,12 @@ class RuleEngine:
                 modulename = self.__filename_to_modulename(filename)
                 # reload?
                 if modulename in sys.modules:
-                    logging.info("reload '" + filename + "'")
+                    logging.info("reloading '" + filename + "'")
                     self.__cron_scheduler.remove_jobs(modulename)
                     self.__trigger_registry.deregister(modulename)
                     importlib.reload(sys.modules[modulename])
                 else:
-                    logging.info("load '" + filename + "'")
+                    logging.info("loading '" + filename + "'")
                     importlib.import_module(modulename)
             except Exception as e:
                 logging.warning("error occurred by (re)loading " + filename, e)
@@ -295,7 +295,7 @@ class RuleEngine:
         try:
             modulename = self.__filename_to_modulename(filename)
             if modulename in sys.modules:
-                logging.info("unload '" + filename + "'")
+                logging.info("unloading '" + filename + "'")
                 self.__cron_scheduler.remove_jobs(modulename)
                 self.__trigger_registry.deregister(modulename)
                 del sys.modules[modulename]
