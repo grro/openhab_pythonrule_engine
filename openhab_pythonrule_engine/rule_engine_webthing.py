@@ -19,39 +19,39 @@ class RuleEngineThing(Thing):
         rule_engine.add_event_listener(self.on_event)
         rule_engine.add_cron_listener(self.on_cron)
 
-        self.last_events = Value("")
+        self.last_event = Value("")
         self.add_property(
             Property(self,
-                     'last_events',
-                     self.last_events,
+                     'last_event',
+                     self.last_event,
                      metadata={
-                         'title': 'last_events',
+                         'title': 'last_event',
                          'type': 'string',
-                         'description': 'the line break delimited newest events',
+                         'description': 'the newest event',
                          'readOnly': True
                      }))
 
-        self.last_handled_events = Value("")
+        self.last_handled_event = Value("")
         self.add_property(
             Property(self,
-                     'last_handled_events',
-                     self.last_handled_events,
+                     'last_handled_event',
+                     self.last_handled_event,
                      metadata={
-                         'title': 'last_handled_events',
+                         'title': 'last_handled_event',
                          'type': 'string',
-                         'description': 'the line break delimited newest handled events',
+                         'description': 'the newest handled event',
                          'readOnly': True
                      }))
 
-        self.last_crons = Value("")
+        self.last_cron = Value("")
         self.add_property(
             Property(self,
-                     'last_crons',
-                     self.last_crons,
+                     'last_cron',
+                     self.last_cron,
                      metadata={
-                         'title': 'last_crons',
+                         'title': 'last_cron',
                          'type': 'string',
-                         'description': 'the line break delimited newest cron executions',
+                         'description': 'the newest cron execution',
                          'readOnly': True
                      }))
 
@@ -62,14 +62,14 @@ class RuleEngineThing(Thing):
         self.ioloop.add_callback(self.__handle_event)
 
     def __handle_event(self):
-        self.last_events.notify_of_external_update('\r\n'.join(self.rule_engine.last_events))
-        self.last_handled_events.notify_of_external_update('\r\n'.join(self.rule_engine.last_handled_events))
+        self.last_event.notify_of_external_update(self.rule_engine.last_event)
+        self.last_handled_event.notify_of_external_update(self.rule_engine.last_handled_event)
 
     def on_cron(self):
         self.ioloop.add_callback(self.__handle_cron)
 
     def __handle_cron(self):
-        self.last_crons.notify_of_external_update('\r\n'.join(self.rule_engine.last_crons))
+        self.last_cron.notify_of_external_update(self.rule_engine.last_crons)
 
 
 

@@ -241,12 +241,24 @@ class RuleEngine:
         return self.__last_events
 
     @property
+    def last_event(self) -> str:
+        return self.__last_events[-1]
+
+    @property
     def last_handled_events(self) -> List[str]:
         return self.__last_handled_events
 
     @property
+    def last_handled_event(self) -> str:
+        return self.__last_handled_events[-1]
+
+    @property
     def last_crons(self) -> List[str]:
         return self.__cron_scheduler.last_crons
+
+    @property
+    def last_cron(self) -> str:
+        return self.__cron_scheduler.last_crons[-1]
 
     def start(self):
         if self.python_rule_directory not in sys.path:
