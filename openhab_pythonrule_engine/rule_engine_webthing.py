@@ -25,7 +25,7 @@ class RuleEngineThing(Thing):
                      'last_event',
                      self.last_event,
                      metadata={
-                         'title': 'last_event',
+                         'title': 'last event occurred',
                          'type': 'string',
                          'description': 'the newest event',
                          'readOnly': True
@@ -37,7 +37,7 @@ class RuleEngineThing(Thing):
                      'last_handled_event',
                      self.last_handled_event,
                      metadata={
-                         'title': 'last_handled_event',
+                         'title': 'last handled event',
                          'type': 'string',
                          'description': 'the newest handled event',
                          'readOnly': True
@@ -46,10 +46,10 @@ class RuleEngineThing(Thing):
         self.last_cron = Value("")
         self.add_property(
             Property(self,
-                     'last_cron',
+                     'last_handled_cron',
                      self.last_cron,
                      metadata={
-                         'title': 'last_cron',
+                         'title': 'last handled cron',
                          'type': 'string',
                          'description': 'the newest cron execution',
                          'readOnly': True
@@ -69,7 +69,7 @@ class RuleEngineThing(Thing):
         self.ioloop.add_callback(self.__handle_cron)
 
     def __handle_cron(self):
-        self.last_cron.notify_of_external_update(self.rule_engine.last_crons)
+        self.last_cron.notify_of_external_update(self.rule_engine.last_cron)
 
 
 
