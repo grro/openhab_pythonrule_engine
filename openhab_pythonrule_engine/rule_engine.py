@@ -220,6 +220,7 @@ class RuleEngine:
         self.__event_listeners = set()
         self.__last_events = []
         self.__last_handled_events = []
+        self.openhab_uri = openhab_uri
         self.python_rule_directory = python_rule_directory
         logging.info("connecting " + openhab_uri)
         ItemRegistry.new_singleton(openhab_uri, user, pwd)
