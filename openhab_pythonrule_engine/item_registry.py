@@ -186,12 +186,36 @@ class ItemRegistry:
         return ItemRegistry.__instance
 
     def __init__(self, openhab_uri: str, user: str, pwd: str):
+        self.__last_updates = []
+        self.__last_failed_updates = []
         self.cache = Cache()
         self.credentials = HTTPBasicAuth(user, pwd)
         if openhab_uri.endswith("/"):
             self.openhab_uri = openhab_uri
         else:
             self.openhab_uri = openhab_uri + "/"
+
+    @property
+    def last_updates(self) -> List[str]:
+        return self.__last_updates
+
+    @property
+    def last_update(self) -> Optional[str]:
+        if len(self.last_updates) > 0:
+            return self.last_updates[-1]
+        else:
+            return None
+
+    @property
+    def last_failed_updates(self) -> List[str]:
+        return self.__last_failed_updates
+
+    @property
+    def last_failed_update(self) -> Optional[str]:
+        if len(self.last_failed_updates) > 0:
+            return self.last_failed_updates[-1]
+        else:
+            return None
 
     def on_event(self, event):
         if event.get("type", "") == "ThingUpdatedEvent":
@@ -246,18 +270,35 @@ class ItemRegistry:
     def get_group_membernames(self, group_name) -> List[str]:
         return [item.item_name for item in self.get_items().values() if group_name in item.group_names]
 
+    def __on_last_update(self, item_name: str, value):
+        self.__last_updates.append("[" + datetime.now().strftime("%Y-%m-%dT%H:%M:%S") + "] new value " + item_name + ": " + str(value))
+        while len(self.__last_updates) > 20:
+            self.__last_updates.pop(0)
+
+    def __on_last_failed_update(self, item_name: str, value, error_message: str):
+        self.__last_failed_updates.append("[" + datetime.now().strftime("%Y-%m-%dT%H:%M:%S") + "] error occured by setting " + item_name + " with " + str(value) + "  " + error_message)
+        while len(self.__last_failed_updates) > 20:
+            self.__last_failed_updates.pop(0)
+
     def set_item_state(self, item_name: str, value: str):
         uri = self.openhab_uri+ "rest/items/" + item_name
         try:
             response = requests.post(uri, data=value, headers={"Content-type": "text/plain"}, auth = self.credentials)
             if response.status_code == 200:
+                self.__on_last_update(item_name, value)
                 return
             elif response.status_code == 404:
-                raise Exception("item " +   uri + " not exists " + response.text)
+                txt = "item " +   uri + " not exists " + response.text
+                self.__on_last_failed_update(item_name, value, txt)
+                raise Exception(txt)
             elif response.status_code == 401:
-                raise Exception("auth error. user=" + self.credentials.username)
+                txt = "auth error. user=" + self.credentials.username
+                self.__on_last_failed_update(item_name, value, txt)
+                raise Exception(txt)
             else:
-                raise Exception("could not update item state " +   uri +  " got error " + response.text)
+                txt = "could not update item state " +   uri +  " got error " + response.text
+                self.__on_last_failed_update(item_name, value, txt)
+                raise Exception(txt)
         except Exception as e:
             logging.warning("error occurred by performing put on " + uri, e)
 

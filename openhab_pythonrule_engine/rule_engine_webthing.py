@@ -55,6 +55,31 @@ class RuleEngineThing(Thing):
                          'readOnly': True
                      }))
 
+        self.last_item_update = Value("")
+        self.add_property(
+            Property(self,
+                     'last_item_update',
+                     self.last_item_update,
+                     metadata={
+                         'title': 'last successful item update',
+                         'type': 'string',
+                         'description': 'the newest item update',
+                         'readOnly': True
+                     }))
+
+        self.last_item_update_failed = Value("")
+        self.add_property(
+            Property(self,
+                     'last_item_update_failed',
+                     self.last_item_update_failed,
+                     metadata={
+                         'title': 'last failed item update',
+                         'type': 'string',
+                         'description': 'the newest failed item update',
+                         'readOnly': True
+                     }))
+
+
         self.ioloop = tornado.ioloop.IOLoop.current()
 
 
@@ -64,13 +89,16 @@ class RuleEngineThing(Thing):
     def __handle_event(self):
         self.last_event.notify_of_external_update(self.rule_engine.last_event)
         self.last_handled_event.notify_of_external_update(self.rule_engine.last_handled_event)
+        self.last_item_update.notify_of_external_update(self.rule_engine.last_item_update)
+        self.last_item_update_failed.notify_of_external_update(self.rule_engine.last_failed_item_update)
 
     def on_cron(self):
         self.ioloop.add_callback(self.__handle_cron)
 
     def __handle_cron(self):
         self.last_cron.notify_of_external_update(self.rule_engine.last_cron)
-
+        self.last_item_update.notify_of_external_update(self.rule_engine.last_item_update)
+        self.last_item_update_failed.notify_of_external_update(self.rule_engine.last_failed_item_update)
 
 
 

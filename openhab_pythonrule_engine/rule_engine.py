@@ -241,24 +241,49 @@ class RuleEngine:
         return self.__last_events
 
     @property
-    def last_event(self) -> str:
-        return self.__last_events[-1]
+    def last_event(self) -> Optional[str]:
+        if len(self.last_events) > 0:
+            return self.last_events[-1]
+        else:
+            return None
 
     @property
     def last_handled_events(self) -> List[str]:
         return self.__last_handled_events
 
     @property
-    def last_handled_event(self) -> str:
-        return self.__last_handled_events[-1]
+    def last_handled_event(self) -> Optional[str]:
+        if len(self.last_handled_events) > 0:
+            return self.last_handled_events[-1]
+        else:
+            return None
 
     @property
     def last_crons(self) -> List[str]:
         return self.__cron_scheduler.last_crons
 
     @property
-    def last_cron(self) -> str:
-        return self.__cron_scheduler.last_crons[-1]
+    def last_cron(self) -> Optional[str]:
+        if len(self.last_crons) > 0:
+            return self.last_crons[-1]
+        else:
+            return None
+
+    @property
+    def last_item_updates(self) -> List[str]:
+        return ItemRegistry.instance().last_updates
+
+    @property
+    def last_item_update(self) -> Optional[str]:
+        return ItemRegistry.instance().last_update
+
+    @property
+    def last_failed_item_updates(self) -> List[str]:
+        return ItemRegistry.instance().last_failed_updates
+
+    @property
+    def last_failed_item_update(self) -> Optional[str]:
+        return ItemRegistry.instance().last_failed_update
 
     def start(self):
         if self.python_rule_directory not in sys.path:
