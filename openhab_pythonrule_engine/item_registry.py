@@ -344,8 +344,7 @@ class ItemRegistry:
         else:
             return state.get_state_as_datetime()
 
-
-    def set_state(self, item_name: str, new_state, reason: str = "", log_level: int = INFO) -> bool:
+    def set_state(self, item_name: str, new_state, reason: str = "", log_level: int = INFO, force: bool = False) -> bool:
         if new_state is None:
             logging.warning("try to set " + item_name + " = None. ignoring it")
         else:
@@ -356,7 +355,7 @@ class ItemRegistry:
                 old_state = self.get_state(item_name, None)
                 serialized_old_sate = item_metadata.serialize(old_state)
                 serialized_new_state = item_metadata.serialize(new_state)
-                if serialized_old_sate != serialized_new_state:
+                if force or serialized_old_sate != serialized_new_state:
                     try:
                         self.set_item_state(item_name, serialized_new_state)
                         logging.log(log_level, "set " + item_name + " = " + serialized_new_state + " " + reason)
