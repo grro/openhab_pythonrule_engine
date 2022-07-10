@@ -34,6 +34,9 @@ class Item:
     def get_state_as_numeric(self) -> float:
         pass
 
+    def get_state_as_integer(self) -> int:
+        return int(self.get_state_as_numeric())
+
     def get_state_as_datetime(self) -> datetime:
         text = self.get_state_as_text()
         return datetime.fromtimestamp(parser.parse(text).timestamp())
