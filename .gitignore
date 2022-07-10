@@ -128,3 +128,4 @@ dmypy.json
 # Pyre type checker
 .pyre/
 /openhab_pythonrule_engine.iml
+/openhab_pythonrule_engine/deleteme.py

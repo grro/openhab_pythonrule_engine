@@ -34,9 +34,6 @@ class Item:
     def get_state_as_numeric(self) -> float:
         pass
 
-    def get_state_as_integer(self) -> int:
-        return int(self.get_state_as_numeric())
-
     def get_state_as_datetime(self) -> datetime:
         text = self.get_state_as_text()
         return datetime.fromtimestamp(parser.parse(text).timestamp())
@@ -72,6 +69,8 @@ class TextItem(Item):
         elif type(value_to_serialize) == datetime:
             return value_to_serialize.strftime('%Y-%m-%dT%H:%M:%S')
         elif type(value_to_serialize) == int:
+            return str(int(value_to_serialize))
+        elif type(value_to_serialize) == float:
             return str(float(value_to_serialize))
         else:
             return str(value_to_serialize)
@@ -346,6 +345,9 @@ class ItemRegistry:
             return parser.parse(datetime_string)
         else:
             return state.get_state_as_datetime()
+
+    def is_equals_(self, state1: str, state2: str):
+        return state1 == state2
 
     def set_state(self, item_name: str, new_state, reason: str = "", log_level: int = INFO, force: bool = False) -> bool:
         if new_state is None:
