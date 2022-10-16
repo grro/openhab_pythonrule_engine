@@ -388,5 +388,5 @@ class RuleEngine:
                 rules.add(rule)
         return sorted(list(rules))
 
-RuleEngine.start_singleton("http://192.2.1.11:8080", "C:\\temp\\test", sys.argv[1], sys.argv[2])
-sleep(10000)
+#RuleEngine.start_singleton("http://192.2.1.11:8080", "C:\\temp\\test", sys.argv[1], sys.argv[2])
+#sleep(10000)
