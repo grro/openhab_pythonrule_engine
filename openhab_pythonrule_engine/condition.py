@@ -1,8 +1,19 @@
 import logging
+
+import pycron
+
 from openhab_pythonrule_engine.item_registry import ItemRegistry
 from openhab_pythonrule_engine.rule_engine import RuleEngine
 from openhab_pythonrule_engine.trigger import CronTrigger, ItemReceivedCommandTrigger, ItemChangedTrigger, RuleLoadedTrigger
 
+
+
+def is_vaild_cron(cron: str) -> bool:
+    try:
+        pycron.is_now(cron)
+        return True
+    except Exception as e:
+        return False
 
 
 def when(target: str):
@@ -72,12 +83,15 @@ def when(target: str):
     elif target.lower().startswith("time cron"):
         cron = target[len("time cron"):].strip()
 
-        def decorated_method(function):
-            trigger = CronTrigger(cron, target, function)
-            RuleEngine.instance().add_trigger(trigger)
-            return function
+        if is_vaild_cron(cron):
+            def decorated_method(function):
+                trigger = CronTrigger(cron, target, function)
+                RuleEngine.instance().add_trigger(trigger)
+                return function
 
-        return decorated_method
+            return decorated_method
+        else:
+            logging.warning("cron " + cron + " is invalid (syntax error?)")
 
     else:
         logging.warning("unsupported expression " + target + " ignoring it")
