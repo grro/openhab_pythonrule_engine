@@ -27,7 +27,7 @@ class Trigger(ABC):
     def add_listener(self, listener):
         self.listeners.add(listener)
 
-    def is_valid(self) -> bool:
+    def is_valid(self) -> bool:fix
         return self.invoker is not None
 
     def invoke(self, item_registry: ItemRegistry):
@@ -40,7 +40,7 @@ class Trigger(ABC):
         except Exception as e:
             self.last_executions.append(Execution(self, datetime.now(), e))
             logging.warning("Error occurred by invoking " + self.name, e)
-        for listener in self.listeners:
+        for listener in self.listeners.copy():
             try:
                 listener(self)
             except Exception as e:
