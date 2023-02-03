@@ -27,7 +27,7 @@ class Trigger(ABC):
     def add_listener(self, listener):
         self.listeners.add(listener)
 
-    def is_valid(self) -> bool:fix
+    def is_valid(self) -> bool:
         return self.invoker is not None
 
     def invoke(self, item_registry: ItemRegistry):
