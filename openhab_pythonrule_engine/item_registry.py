@@ -172,8 +172,6 @@ def to_item(data) -> Optional[Item]:
         return None
 
 
-
-
 class ItemRegistry:
     __instance = None
 
@@ -311,6 +309,13 @@ class ItemRegistry:
                 return items_meta_data[item_name]
         return None
 
+    def __get_item_metadata_or_throw_error(self, item_name: str) -> Item:
+        item_metadata = self.get_item_metadata(item_name)
+        if item_metadata is None:
+            raise Exception("item " + item_name + " not exists")
+        else:
+            return item_metadata
+
     def get_state(self, item_name: str, dflt):
         state = self.get_item(item_name)
         if state is None or state.value is None:
@@ -346,25 +351,31 @@ class ItemRegistry:
         else:
             return state.get_state_as_datetime()
 
-    def is_equals_(self, state1: str, state2: str):
+    def is_equals(self, state1: str, state2: str):
         return state1 == state2
+
+    def __state_not_equals(self, item_name: str, new_state) -> bool:
+        try:
+            old_state = self.get_state(item_name, None)
+            item_metadata = self.__get_item_metadata_or_throw_error(item_name)
+            return item_metadata.serialize(old_state) != item_metadata.serialize(new_state)
+        except Exception as e:
+            logging.warning("error occurred fetching state of " + item_name + " " + str(e))
+            return True
 
     def set_state(self, item_name: str, new_state, reason: str = "", log_level: int = INFO, force: bool = False) -> bool:
         if new_state is None:
             logging.warning("try to set " + item_name + " = None. ignoring it")
         else:
-            item_metadata = self.get_item_metadata(item_name)
-            if item_metadata is None:
-                raise Exception("item " + item_name + " not exists")
-            else:
-                old_state = self.get_state(item_name, None)
-                serialized_old_sate = item_metadata.serialize(old_state)
-                serialized_new_state = item_metadata.serialize(new_state)
-                if force or serialized_old_sate != serialized_new_state:
+            if force or self.__state_not_equals(item_name, new_state):
+                try:
+                    serialized_new_state = self.__get_item_metadata_or_throw_error(item_name).serialize(new_state)
                     try:
                         self.set_item_state(item_name, serialized_new_state)
                         logging.log(log_level, "set " + item_name + " = " + serialized_new_state + " " + reason)
                         return True
                     except Exception as e:
-                        logging.warning("could not set " + item_name + " = " + serialized_new_state, e)
+                        logging.warning("could not set " + item_name + " = " + str(serialized_new_state) + " " + str(e))
+                except Exception as e:
+                    logging.warning("could not serialized value " + str(new_state) + " to update " + item_name + " " + str(e))
         return False
