@@ -1,4 +1,3 @@
-import requests
 import logging
 from logging import INFO
 from dateutil import parser
