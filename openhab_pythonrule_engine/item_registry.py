@@ -4,6 +4,7 @@ from logging import INFO
 from dateutil import parser
 from datetime import datetime
 from dataclasses import dataclass
+from requests import Session
 from requests.auth import HTTPBasicAuth
 from typing import Optional, List, Dict, Any
 from openhab_pythonrule_engine.cache import Cache
@@ -190,10 +191,14 @@ class ItemRegistry:
         self.__last_failed_updates = []
         self.cache = Cache()
         self.credentials = HTTPBasicAuth(user, pwd)
+        self.__session = Session()
         if openhab_uri.endswith("/"):
             self.openhab_uri = openhab_uri
         else:
             self.openhab_uri = openhab_uri + "/"
+
+    def __renew_session(self):
+        self.__session = Session()
 
     @property
     def last_updates(self) -> List[str]:
@@ -229,7 +234,7 @@ class ItemRegistry:
         else:
             uri = self.openhab_uri+ "rest/items"
             try:
-                response = requests.get(uri, headers={"Accept": "application/json"}, auth = self.credentials)
+                response = self.__session.get(uri, headers={"Accept": "application/json"}, auth = self.credentials)
                 if response.status_code == 200:
                     items = {}
                     for entry in response.json():
@@ -243,12 +248,13 @@ class ItemRegistry:
                 else:
                     raise Exception("could not read item state " +   uri +  " got error " + response.text)
             except Exception as e:
+                self.__renew_session()
                 logging.warning("error occurred by calling " + uri, e)
 
     def get_item(self, item_name: str) -> Optional[Item]:
         uri = self.openhab_uri+ "rest/items/" + item_name
         try:
-            response = requests.get(uri, headers={"Accept": "application/json"}, auth = self.credentials)
+            response = self.__session.get(uri, headers={"Accept": "application/json"}, auth = self.credentials)
             if response.status_code == 200:
                 data = response.json()
                 return to_item(data)
@@ -259,6 +265,7 @@ class ItemRegistry:
             else:
                 raise Exception("could not read item state " +  uri +  " got error " + response.text)
         except Exception as e:
+            self.__renew_session()
             logging.warning("error occurred by calling " + uri, e)
 
     def has_item(self, item_name: str) -> bool:
@@ -283,7 +290,7 @@ class ItemRegistry:
     def set_item_state(self, item_name: str, value: str):
         uri = self.openhab_uri+ "rest/items/" + item_name
         try:
-            response = requests.post(uri, data=value, headers={"Content-type": "text/plain"}, auth = self.credentials)
+            response = self.__session.post(uri, data=value, headers={"Content-type": "text/plain"}, auth = self.credentials)
             if response.status_code == 200:
                 self.__on_last_update(item_name, value)
                 return
@@ -300,6 +307,7 @@ class ItemRegistry:
                 self.__on_last_failed_update(item_name, value, txt)
                 raise Exception(txt)
         except Exception as e:
+            self.__renew_session()
             logging.warning("error occurred by performing put on " + uri, e)
 
     def get_item_metadata(self, item_name: str) -> Optional[Item]:
