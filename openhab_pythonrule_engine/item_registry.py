@@ -337,6 +337,9 @@ class ItemRegistry:
         else:
             return state.get_state_as_numeric()
 
+    def get_state_as_int(self, item_name: str, dflt: float=-1) -> int:
+        return int(self.get_state_as_numeric(item_name, dflt))
+
     def get_state_as_boolean(self, item_name: str, dflt: bool=False) -> bool:
         state = self.get_item(item_name)
         if state is None or state.value is None:
