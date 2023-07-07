@@ -47,7 +47,7 @@ class RuleEngineThing(Thing):
         self.add_property(
             Property(self,
                      'loaded_modules',
-                     self.last_event,
+                     self.loaded_modules,
                      metadata={
                          'title': 'loaded modules',
                          'type': 'string',
