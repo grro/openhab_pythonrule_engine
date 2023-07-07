@@ -131,7 +131,7 @@ class RuleEngineThing(Thing):
         self.last_item_update.notify_of_external_update(self.rule_engine.last_item_update)
         self.last_item_update_failed.notify_of_external_update(self.rule_engine.last_failed_item_update)
         self.last_item_updates.notify_of_external_update(", ".join(self.rule_engine.last_item_updates))
-        self.loaded_modules.notify_of_external_update(", ".join(self.rule_engine.loaded_modules))
+        self.loaded_modules.notify_of_external_update(", ".join(sorted(list(self.rule_engine.loaded_modules))))
 
 
 def run_server(port: int, description: str, rule_engine: RuleEngine):
