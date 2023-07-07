@@ -227,6 +227,7 @@ class RuleEngine:
         self.__event_consumer = EventConsumer(openhab_uri, self)
         self.__cron_scheduler = CronScheduler()
         self.__trigger_registry = TriggerRegistry()
+        self.loaded_modules = set()
 
     def add_listener(self, listener):
         self.__listeners.add(listener)
@@ -323,22 +324,26 @@ class RuleEngine:
                     self.__cron_scheduler.remove_jobs(modulename)
                     self.__trigger_registry.deregister(modulename)
                     importlib.reload(sys.modules[modulename])
+                    logging.info("'" + filename + "' reloaded")
                 else:
                     logging.info("loading '" + filename + "'")
                     importlib.import_module(modulename)
+                    logging.info("'" + filename + "' loaded for the first time")
+                self.loaded_modules.add(filename)
             except Exception as e:
-                logging.warning("error occurred by (re)loading " + filename, e)
+                logging.warning("error occurred by (re)loading " + filename + " " + str(e), e)
 
     def unload_module(self, filename: str):
         try:
             modulename = self.__filename_to_modulename(filename)
             if modulename in sys.modules:
-                logging.info("unloading '" + filename + "'")
+                logging.info("\"unloading\" '" + filename + "'")
                 self.__cron_scheduler.remove_jobs(modulename)
                 self.__trigger_registry.deregister(modulename)
                 del sys.modules[modulename]
+            self.loaded_modules.remove(filename)
         except Exception as e:
-            logging.warning("error occurred by unloading " + filename, e)
+            logging.warning("error occurred by unloading " + filename + " " + str(e), e)
 
     def __filename_to_modulename(self, filename):
         return filename[:-3]

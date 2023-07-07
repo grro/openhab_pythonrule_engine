@@ -43,6 +43,18 @@ class RuleEngineThing(Thing):
                          'readOnly': True
                      }))
 
+        self.loaded_modules = Value("")
+        self.add_property(
+            Property(self,
+                     'loaded_modules',
+                     self.last_event,
+                     metadata={
+                         'title': 'loaded modules',
+                         'type': 'string',
+                         'description': 'the list of loaded modules',
+                         'readOnly': True
+                     }))
+
         self.last_handled_event = Value("")
         self.add_property(
             Property(self,
@@ -119,7 +131,7 @@ class RuleEngineThing(Thing):
         self.last_item_update.notify_of_external_update(self.rule_engine.last_item_update)
         self.last_item_update_failed.notify_of_external_update(self.rule_engine.last_failed_item_update)
         self.last_item_updates.notify_of_external_update(", ".join(self.rule_engine.last_item_updates))
-
+        self.loaded_modules.notify_of_external_update(", ".join(self.rule_engine.loaded_modules))
 
 
 def run_server(port: int, description: str, rule_engine: RuleEngine):
