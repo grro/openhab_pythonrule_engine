@@ -51,7 +51,7 @@ class EventConsumer:
     def __listen(self):
         while self.is_running:
             try:
-                logging.debug("opening sse stream (" + self.event_uri + ")")
+                logging.info("opening sse stream (" + self.event_uri + ")")
                 response = requests.get(self.event_uri, stream=True)
                 client = sseclient.SSEClient(response)
 

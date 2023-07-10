@@ -49,7 +49,8 @@ class InternetApp(App):
                                and (args.python_rule_directory is not None) \
                                and (args.user is not None) \
                                and (args.pwd is not None):
-            rule_engine = RuleEngine.start_singleton(args.openhab_uri, args.python_rule_directory, args.user, args.pwd)
+            rule_engine = RuleEngine(args.openhab_uri, args.python_rule_directory, args.user, args.pwd)
+            rule_engine.start()
             run_server(port, self.description, rule_engine)
             return True
         elif args.command == 'register' and \

@@ -174,17 +174,6 @@ def to_item(data) -> Optional[Item]:
 
 
 class ItemRegistry:
-    __instance = None
-
-    @staticmethod
-    def new_singleton(openhab_uri: str, user: str, pwd: str):
-        item_registry = ItemRegistry(openhab_uri, user, pwd)
-        ItemRegistry.__instance = item_registry
-        return item_registry
-
-    @staticmethod
-    def instance():
-        return ItemRegistry.__instance
 
     def __init__(self, openhab_uri: str, user: str, pwd: str):
         self.__last_updates = []
