@@ -71,6 +71,7 @@ class RuleEngine:
             self.last_executed = source.last_executed
         else:
             self.last_executed = source.last_error
+        self.__notify_listener()
 
     def __del__(self):
         self.stop()

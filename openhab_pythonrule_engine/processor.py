@@ -36,7 +36,7 @@ class Processor(ABC):
 
     def remove_triggers(self, module: str):
         if module in self.trigger_by_module.keys():
-            logging.info("removing all " + str(len(self.trigger_by_module[module])) + self.name + " trigger of '" + module + "'")
+            logging.info("removing all " + str(len(self.trigger_by_module[module])) + " " + self.name + " trigger of '" + module + "'")
             del self.trigger_by_module[module]
         self.on_remove_triggers(module)
 
