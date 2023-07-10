@@ -68,6 +68,7 @@ class RuleEngine:
 
     def add_listener(self, listener):
         self.listeners.add(listener)
+        self.__notify_listener()
 
     def __notify_listener(self):
         for listener in self.listeners:
