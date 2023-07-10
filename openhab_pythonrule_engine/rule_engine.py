@@ -56,7 +56,7 @@ class RuleEngine:
         self.is_running = False
         self.openhab_uri = openhab_uri
         logging.info("connecting " + openhab_uri)
-        self.loaded_modules = set()
+        self.loaded_modules = dict()
         self.last_executed = ""
         self.last_error = ""
         self.__item_registry = ItemRegistry(openhab_uri, user, pwd)
@@ -117,11 +117,11 @@ class RuleEngine:
                 else:
                     importlib.import_module(modulename)
                     msg = "'" + filename + "' loaded for the first time"
-                self.loaded_modules.add(filename)
-                self.__notify_listener()
                 num_annotations = visit(modulename, [processor.parser() for processor in self.__processors])
+                self.loaded_modules[filename] = num_annotations
                 if num_annotations > 0:
                     logging.info(msg)
+                self.__notify_listener()
             except Exception as e:
                 logging.warning("error occurred by (re)loading " + filename + " " + str(e), e)
 
@@ -134,7 +134,7 @@ class RuleEngine:
                         logging.info("\"unloading\" '" + filename + "'")
                     [processor.remove_triggers(modulename) for processor in self.__processors]
                     del sys.modules[modulename]
-                self.loaded_modules.remove(filename)
+                del self.loaded_modules[filename]
                 self.__notify_listener()
             except Exception as e:
                 logging.warning("error occurred by unloading " + filename + " " + str(e), e)

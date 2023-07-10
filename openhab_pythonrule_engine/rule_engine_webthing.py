@@ -74,8 +74,8 @@ class RuleEngineThing(Thing):
     def __handle(self):
         self.last_executed.notify_of_external_update(self.rule_engine.last_executed)
         self.last_failed.notify_of_external_update(self.rule_engine.last_error)
-        self.loaded_modules.notify_of_external_update(", ".join(sorted(list(self.rule_engine.loaded_modules))))
-
+        modulenames = sorted(list(self.rule_engine.loaded_modules.keys()))
+        self.loaded_modules.notify_of_external_update(", ".join([modulename + " (" + str(self.rule_engine.loaded_modules[modulename]) + ")" for modulename in modulenames if self.rule_engine.loaded_modules[modulename] > 0]))
 
 def run_server(port: int, description: str, rule_engine: RuleEngine):
     rule_engine_webthing = RuleEngineThing(description, rule_engine)
