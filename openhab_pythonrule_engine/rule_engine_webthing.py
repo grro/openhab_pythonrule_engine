@@ -42,12 +42,9 @@ class RuleEngineThing(Thing):
                      }))
 
         self.ioloop = tornado.ioloop.IOLoop.current()
+        self.rule_engine.add_listener(self.on_update)
 
-
-    def on_event(self):
-        self.ioloop.add_callback(self.__handle)
-
-    def on_cron(self):
+    def on_update(self):
         self.ioloop.add_callback(self.__handle)
 
     def __handle(self):

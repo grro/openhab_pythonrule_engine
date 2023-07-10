@@ -11,7 +11,6 @@ from openhab_pythonrule_engine.loaded_rule_processor import RuleLoadedProcessor
 from openhab_pythonrule_engine.source_scanner import visit
 
 
-
 class FileSystemListener(FileSystemEventHandler):
 
     def __init__(self, rule_engine, dir):
@@ -62,9 +61,20 @@ class RuleEngine:
                              CronProcessor(self.__item_registry),
                              RuleLoadedProcessor(self.__item_registry)]
         self.file_system_listener = FileSystemListener(self, python_rule_directory)
+        self.listeners = set()
 
     def __del__(self):
         self.stop()
+
+    def add_listener(self, listener):
+        self.listeners.add(listener)
+
+    def __notify_listener(self):
+        for listener in self.listeners:
+            try:
+                listener()
+            except Exception as e:
+                logging.warning("error occurred calling " + str(listener) + " " + str(e))
 
     def start(self):
         if not self.is_running:
@@ -97,6 +107,7 @@ class RuleEngine:
                     importlib.import_module(modulename)
                     msg = "'" + filename + "' loaded for the first time"
                 self.loaded_modules.add(filename)
+                self.__notify_listener()
                 num_annotations = visit(modulename, [processor.parser() for processor in self.__processors])
                 if num_annotations > 0:
                     logging.info(msg)
@@ -113,6 +124,7 @@ class RuleEngine:
                     [processor.remove_triggers(modulename) for processor in self.__processors]
                     del sys.modules[modulename]
                 self.loaded_modules.remove(filename)
+                self.__notify_listener()
             except Exception as e:
                 logging.warning("error occurred by unloading " + filename + " " + str(e), e)
 

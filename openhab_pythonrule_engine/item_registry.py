@@ -10,9 +10,6 @@ from typing import Optional, List, Dict, Any
 from openhab_pythonrule_engine.cache import Cache
 
 
-logging = logging.getLogger(__name__)
-
-
 @dataclass
 class Item:
     item_name: str
