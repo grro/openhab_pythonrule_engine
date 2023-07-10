@@ -2,13 +2,13 @@ import logging
 import os
 import sys
 import importlib
-from source_scanner import visit
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from openhab_pythonrule_engine.item_registry import ItemRegistry
 from openhab_pythonrule_engine.cron_processor import CronProcessor
 from openhab_pythonrule_engine.item_change_processor import ItemChangeProcessor
 from openhab_pythonrule_engine.loaded_rule_processor import RuleLoadedProcessor
+from openhab_pythonrule_engine.source_scanner import visit
 
 
 
