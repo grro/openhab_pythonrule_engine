@@ -41,6 +41,30 @@ class RuleEngineThing(Thing):
                          'readOnly': True
                      }))
 
+        self.last_executed = Value("")
+        self.add_property(
+            Property(self,
+                     'last_executed',
+                     self.last_executed,
+                     metadata={
+                         'title': 'last executed rule',
+                         'type': 'string',
+                         'description': 'the last executed rule',
+                         'readOnly': True
+                     }))
+
+        self.last_failed = Value("")
+        self.add_property(
+            Property(self,
+                     'last_failed',
+                     self.last_failed,
+                     metadata={
+                         'title': 'last failed rule',
+                         'type': 'string',
+                         'description': 'the failed executed rule',
+                         'readOnly': True
+                     }))
+
         self.ioloop = tornado.ioloop.IOLoop.current()
         self.rule_engine.add_listener(self.on_update)
 
@@ -48,6 +72,8 @@ class RuleEngineThing(Thing):
         self.ioloop.add_callback(self.__handle)
 
     def __handle(self):
+        self.last_executed.notify_of_external_update(self.rule_engine.last_executed)
+        self.last_failed.notify_of_external_update(self.rule_engine.last_error)
         self.loaded_modules.notify_of_external_update(", ".join(sorted(list(self.rule_engine.loaded_modules))))
 
 

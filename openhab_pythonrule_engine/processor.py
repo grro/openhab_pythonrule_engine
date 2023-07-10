@@ -1,17 +1,27 @@
 import logging
 from abc import ABC
 from typing import Set
+from datetime import datetime
 from openhab_pythonrule_engine.trigger import Trigger
 from openhab_pythonrule_engine.item_registry import ItemRegistry
 
 
 class Processor(ABC):
 
-    def __init__(self, name: str, item_registry: ItemRegistry):
+    def __init__(self, name: str, item_registry: ItemRegistry, listener):
         self.name = name
         self.item_registry = item_registry
         self.is_running = False
         self.trigger_by_module = {}
+        self.last_executed = ""
+        self.last_error = ""
+        self.listener = listener
+
+    def __notify_listener(self, success: bool):
+        try:
+            self.listener(self, success)
+        except Exception as e:
+            logging.warning("error occurred calling " + self.listener + " " + str(e))
 
     @property
     def triggers(self) -> Set[Trigger]:
@@ -33,8 +43,12 @@ class Processor(ABC):
     def process_trigger(self, trigger: Trigger):
         try:
             trigger.invoke(self.item_registry)
+            self.last_executed = datetime.now().strftime("%H:%M:%S") + ' - ' + trigger.module + '.py  @when("' + trigger.expression + '")'
+            self.__notify_listener(True)
         except Exception as e:
             logging.warning("Error occurred by executing rule " + trigger.name, e)
+            self.last_error = datetime.now().strftime("%H:%M:%S") + ' - ' + trigger.module + '.py  @when("' + trigger.expression + '")' + " " + str(e)
+            self.__notify_listener(False)
 
     def start(self):
         if not self.is_running:

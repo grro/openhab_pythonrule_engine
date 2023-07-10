@@ -11,8 +11,8 @@ class RuleLoadedTrigger(Trigger):
 
 class RuleLoadedProcessor(Processor):
 
-    def __init__(self, item_registry: ItemRegistry):
-        super().__init__("rule loadded", item_registry)
+    def __init__(self, item_registry: ItemRegistry, listener):
+        super().__init__("rule loadded", item_registry, listener)
 
     def parser(self):
         return RuleLoadedTriggerParser(self).on_annotation

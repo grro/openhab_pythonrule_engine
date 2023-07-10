@@ -5,6 +5,7 @@ import importlib
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from openhab_pythonrule_engine.item_registry import ItemRegistry
+from openhab_pythonrule_engine.processor import Processor
 from openhab_pythonrule_engine.cron_processor import CronProcessor
 from openhab_pythonrule_engine.item_change_processor import ItemChangeProcessor
 from openhab_pythonrule_engine.loaded_rule_processor import RuleLoadedProcessor
@@ -56,12 +57,20 @@ class RuleEngine:
         self.openhab_uri = openhab_uri
         logging.info("connecting " + openhab_uri)
         self.loaded_modules = set()
+        self.last_executed = ""
+        self.last_error = ""
         self.__item_registry = ItemRegistry(openhab_uri, user, pwd)
-        self.__processors = [ItemChangeProcessor(openhab_uri, self.__item_registry),
-                             CronProcessor(self.__item_registry),
-                             RuleLoadedProcessor(self.__item_registry)]
+        self.__processors = [ItemChangeProcessor(openhab_uri, self.__item_registry, self.on_executed),
+                             CronProcessor(self.__item_registry, self.on_executed),
+                             RuleLoadedProcessor(self.__item_registry, self.on_executed)]
         self.file_system_listener = FileSystemListener(self, python_rule_directory)
         self.listeners = set()
+
+    def on_executed(self, source: Processor, success: bool):
+        if success:
+            self.last_executed = source.last_executed
+        else:
+            self.last_executed = source.last_error
 
     def __del__(self):
         self.stop()
@@ -69,6 +78,7 @@ class RuleEngine:
     def add_listener(self, listener):
         self.listeners.add(listener)
         self.__notify_listener()
+
 
     def __notify_listener(self):
         for listener in self.listeners:

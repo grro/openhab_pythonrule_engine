@@ -44,9 +44,9 @@ class ItemChangedTrigger(ItemTrigger):
 
 class ItemChangeProcessor(Processor):
 
-    def __init__(self, openhab_uri: str, item_registry: ItemRegistry):
+    def __init__(self, openhab_uri: str, item_registry: ItemRegistry, listener):
         self.__event_consumer = EventConsumer(openhab_uri, self)
-        super().__init__("item change", item_registry)
+        super().__init__("item change", item_registry, listener)
 
     def parser(self):
         return ItemTriggerParser(self).on_annotation

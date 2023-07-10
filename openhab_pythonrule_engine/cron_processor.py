@@ -16,9 +16,9 @@ class CronTrigger(Trigger):
 
 class CronProcessor(Processor):
 
-    def __init__(self, item_registry: ItemRegistry):
+    def __init__(self, item_registry: ItemRegistry, listener):
         self.thread = Thread(target=self.__process, daemon=True)
-        super().__init__("cron", item_registry)
+        super().__init__("cron", item_registry, listener)
 
     def parser(self):
         return CronTriggerParser(self).on_annotation
