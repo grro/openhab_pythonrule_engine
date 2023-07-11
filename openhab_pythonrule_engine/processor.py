@@ -28,7 +28,7 @@ class Processor(ABC):
         return set().union(*self.trigger_by_module.values())
 
     def add_trigger(self, trigger: Trigger):
-        logging.info(" * " + trigger.name + "(...): trigger '" + trigger.expression + "' has been registered")
+        logging.info(" * register " +  trigger.module + "#" + trigger.name + "(...) - trigger '" + trigger.expression + "'")
         triggers = self.trigger_by_module.get(trigger.module, set())
         triggers.add(trigger)
         self.trigger_by_module[trigger.module] = triggers
@@ -36,7 +36,7 @@ class Processor(ABC):
 
     def remove_triggers(self, module: str):
         if module in self.trigger_by_module.keys():
-            logging.info("removing all " + str(len(self.trigger_by_module[module])) + " " + self.name + " trigger of '" + module + "'")
+            logging.info(" * unregister " + module + " (" + self.name + ")")
             del self.trigger_by_module[module]
         self.on_remove_triggers(module)
 

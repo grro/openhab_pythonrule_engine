@@ -55,7 +55,6 @@ class RuleEngine:
     def __init__(self, openhab_uri:str, python_rule_directory: str, user: str, pwd: str):
         self.is_running = False
         self.openhab_uri = openhab_uri
-        logging.info("connecting " + openhab_uri)
         self.loaded_modules = dict()
         self.last_executed = ""
         self.last_error = ""

@@ -3,13 +3,10 @@ import time
 import requests
 import json
 import sseclient
+from datetime import datetime
 from threading import Thread
 from typing import Optional
 from dataclasses import dataclass
-
-
-logging = logging.getLogger(__name__)
-
 
 
 
@@ -45,16 +42,19 @@ class EventConsumer:
         self.thread = None
 
     def start(self):
+        logging.info("opening sse stream " + self.event_uri)
         self.thread = Thread(target=self.__listen, daemon=True)
         self.thread.start()
 
     def __listen(self):
+        previous_error_time = None
         while self.is_running:
             try:
-                logging.info("opening sse stream (" + self.event_uri + ")")
                 response = requests.get(self.event_uri, stream=True)
                 client = sseclient.SSEClient(response)
-
+                if previous_error_time is not None:
+                    logging.info("sse stream " + self.event_uri + " re-opened (after " + str(round((datetime.now() - previous_error_time).total_seconds()/60)) + " min)")
+                previous_error_time = None
                 try:
                     for event in client.events():
                         data = json.loads(event.data)
@@ -64,7 +64,9 @@ class EventConsumer:
                     client.close()
                     response.close()
             except Exception as e:
-                logging.error("error occurred consuming sse of " + self.event_uri, e)
+                if previous_error_time is None:
+                    logging.warning("sse stream " + self.event_uri + " disconnected: " + str(e))
+                    previous_error_time = datetime.now()
                 time.sleep(5)
 
     def stop(self):
