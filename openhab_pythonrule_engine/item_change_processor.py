@@ -5,6 +5,9 @@ from openhab_pythonrule_engine.trigger import Trigger
 from openhab_pythonrule_engine.processor import Processor
 from openhab_pythonrule_engine.eventbus_consumer import EventConsumer, ItemEvent, parse_item_event
 
+logging = logging.getLogger(__name__)
+
+
 
 class ItemTrigger(Trigger):
 
@@ -56,7 +59,7 @@ class ItemChangeProcessor(Processor):
         item_event = parse_item_event(event)
         if item_event is not None:
             for item_changed_trigger in [trigger for trigger in self.triggers if trigger.matches(item_event)]:
-                self.process_trigger(item_changed_trigger)
+                self.invoke_trigger(item_changed_trigger)
 
     def on_start(self):
         self.__event_consumer.start()

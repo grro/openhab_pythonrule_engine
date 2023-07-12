@@ -1,9 +1,9 @@
 import logging
 from abc import ABC
-from typing import Set
-from datetime import datetime
 from openhab_pythonrule_engine.trigger import Trigger
 from openhab_pythonrule_engine.item_registry import ItemRegistry
+
+logging = logging.getLogger(__name__)
 
 
 class Processor(ABC):
@@ -12,43 +12,33 @@ class Processor(ABC):
         self.name = name
         self.item_registry = item_registry
         self.is_running = False
-        self.trigger_by_module = {}
-        self.last_executed = ""
-        self.last_error = ""
+        self.triggers = set()
         self.listener = listener
 
-    def __notify_listener(self, success: bool):
+    def __notify_listener(self, trigger: Trigger, error: Exception = None):
         try:
-            self.listener(self, success)
+            self.listener(trigger, error)
         except Exception as e:
             logging.warning("error occurred calling " + self.listener + " " + str(e))
 
-    @property
-    def triggers(self) -> Set[Trigger]:
-        return set().union(*self.trigger_by_module.values())
-
     def add_trigger(self, trigger: Trigger):
-        logging.info(" * register " +  trigger.module + "#" + trigger.name + "(...) - trigger '" + trigger.expression + "'")
-        triggers = self.trigger_by_module.get(trigger.module, set())
-        triggers.add(trigger)
-        self.trigger_by_module[trigger.module] = triggers
+        logging.info(" * register " + trigger.module + "#" + trigger.function_name + "(...) - trigger '" + trigger.expression + "'")
+        self.triggers.add(trigger)
         self.on_add_trigger(trigger)
 
     def remove_triggers(self, module: str):
-        if module in self.trigger_by_module.keys():
-            logging.info(" * unregister " + module + " (" + self.name + ")")
-            del self.trigger_by_module[module]
+        trigger_of_module = {trigger for trigger in self.triggers if trigger.module == module}
+        logging.info(" * unregister " + module + " (" + self.name + ")")
+        self.triggers = self.triggers - trigger_of_module
         self.on_remove_triggers(module)
 
-    def process_trigger(self, trigger: Trigger):
+    def invoke_trigger(self, trigger: Trigger):
         try:
             trigger.invoke(self.item_registry)
-            self.last_executed = datetime.now().strftime("%H:%M:%S") + ' - ' + trigger.module + '.py  @when("' + trigger.expression + '")'
-            self.__notify_listener(True)
+            self.__notify_listener(trigger)
         except Exception as e:
-            logging.warning("Error occurred by executing rule " + trigger.name, e)
-            self.last_error = datetime.now().strftime("%H:%M:%S") + ' - ' + trigger.module + '.py  @when("' + trigger.expression + '")' + " " + str(e)
-            self.__notify_listener(False)
+            logging.warning("Error occurred by executing rule " + trigger.function_name, e)
+            self.__notify_listener(trigger, e)
 
     def start(self):
         if not self.is_running:

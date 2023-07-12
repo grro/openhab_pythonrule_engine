@@ -5,11 +5,13 @@ import importlib
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from openhab_pythonrule_engine.item_registry import ItemRegistry
-from openhab_pythonrule_engine.processor import Processor
+from openhab_pythonrule_engine.trigger import Trigger
 from openhab_pythonrule_engine.cron_processor import CronProcessor
 from openhab_pythonrule_engine.item_change_processor import ItemChangeProcessor
 from openhab_pythonrule_engine.loaded_rule_processor import RuleLoadedProcessor
 from openhab_pythonrule_engine.source_scanner import visit
+
+logging = logging.getLogger(__name__)
 
 
 class FileSystemListener(FileSystemEventHandler):
@@ -55,9 +57,6 @@ class RuleEngine:
     def __init__(self, openhab_uri:str, python_rule_directory: str, user: str, pwd: str):
         self.is_running = False
         self.openhab_uri = openhab_uri
-        self.loaded_modules = dict()
-        self.last_executed = ""
-        self.last_error = ""
         self.__item_registry = ItemRegistry(openhab_uri, user, pwd)
         self.__processors = [ItemChangeProcessor(openhab_uri, self.__item_registry, self.on_executed),
                              CronProcessor(self.__item_registry, self.on_executed),
@@ -65,11 +64,10 @@ class RuleEngine:
         self.file_system_listener = FileSystemListener(self, python_rule_directory)
         self.listeners = set()
 
-    def on_executed(self, source: Processor, success: bool):
-        if success:
-            self.last_executed = source.last_executed
-        else:
-            self.last_executed = source.last_error
+    def triggers(self):
+        return [trigger for processor in self.__processors for trigger in processor.triggers]
+
+    def on_executed(self, trigger: Trigger, error: Exception):
         self.__notify_listener()
 
     def __del__(self):
@@ -78,7 +76,6 @@ class RuleEngine:
     def add_listener(self, listener):
         self.listeners.add(listener)
         self.__notify_listener()
-
 
     def __notify_listener(self):
         for listener in self.listeners:
@@ -118,7 +115,6 @@ class RuleEngine:
                     importlib.import_module(modulename)
                     msg = "'" + filename + "' loaded for the first time"
                 num_annotations = visit(modulename, [processor.parser() for processor in self.__processors])
-                self.loaded_modules[filename] = num_annotations
                 if num_annotations > 0:
                     logging.info(msg)
                 self.__notify_listener()
@@ -134,7 +130,6 @@ class RuleEngine:
                         logging.info("\"unloading\" '" + filename + "'")
                     [processor.remove_triggers(modulename) for processor in self.__processors]
                     del sys.modules[modulename]
-                del self.loaded_modules[filename]
                 self.__notify_listener()
             except Exception as e:
                 logging.warning("error occurred by unloading " + filename + " " + str(e), e)

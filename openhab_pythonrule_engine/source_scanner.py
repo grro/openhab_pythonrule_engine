@@ -2,7 +2,6 @@ import inspect
 import sys
 from typing import List
 
-
 def visit(modulename: str, visitors: List) -> int:
     num_notations = 0
     try:

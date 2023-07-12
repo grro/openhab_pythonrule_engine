@@ -3,6 +3,7 @@ from openhab_pythonrule_engine.processor import Processor
 from openhab_pythonrule_engine.item_registry import ItemRegistry
 
 
+
 class RuleLoadedTrigger(Trigger):
 
     def __init__(self, expression: str, func):
@@ -18,7 +19,7 @@ class RuleLoadedProcessor(Processor):
         return RuleLoadedTriggerParser(self).on_annotation
 
     def on_add_trigger(self, trigger: Trigger):
-        self.process_trigger(trigger)
+        self.invoke_trigger(trigger)
 
 
 class RuleLoadedTriggerParser:

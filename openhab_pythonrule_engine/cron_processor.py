@@ -7,6 +7,8 @@ from openhab_pythonrule_engine.trigger import Trigger
 from openhab_pythonrule_engine.processor import Processor
 
 
+logging = logging.getLogger(__name__)
+
 class CronTrigger(Trigger):
 
     def __init__(self, expression: str, cron: str, func):
@@ -28,7 +30,7 @@ class CronProcessor(Processor):
             try:
                 for cron_trigger in self.triggers:
                     if pycron.is_now(cron_trigger.cron):
-                        self.process_trigger(cron_trigger)
+                        self.invoke_trigger(cron_trigger)
             except Exception as e:
                 logging.warning("Error occurred by executing cron", e)
             sleep(60)  # minimum 60 sec!
