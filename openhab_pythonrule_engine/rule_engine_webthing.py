@@ -80,7 +80,7 @@ class RuleEngineThing(Thing):
         for rule in self.rule_engine.rules():
             key = rule.module + "#" + rule.function_name
             expressions = func_info.get(key, set())
-            expressions.add(rule.expression)
+            expressions.add(rule.trigger_expression)
             func_info[key] = expressions
         sorted_keys = sorted(list(func_info.keys()))
         return [key + " (" + ", ".join(func_info[key]) + ")" for key in sorted_keys]
