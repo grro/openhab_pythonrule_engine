@@ -1,29 +1,29 @@
 import json
 import logging
+import weakref
 from openhab_pythonrule_engine.item_registry import ItemRegistry
-from openhab_pythonrule_engine.trigger import Trigger
+from openhab_pythonrule_engine.rule import Rule
 from openhab_pythonrule_engine.processor import Processor
 from openhab_pythonrule_engine.eventbus_consumer import EventConsumer, ItemEvent, parse_item_event
 
 logging = logging.getLogger(__name__)
 
 
+class ItemRule(Rule):
 
-class ItemTrigger(Trigger):
-
-    def __init__(self, expression: str, func):
-        super().__init__(expression, func)
+    def __init__(self, trigger_expression: str, func):
+        super().__init__(trigger_expression, func)
 
     def matches(self, item_event: ItemEvent) -> bool:
         return False
 
 
-class ItemReceivedCommandTrigger(ItemTrigger):
+class ItemReceivedCommandRule(ItemRule):
 
-    def __init__(self, item_name: str, command: str, expression: str, func):
+    def __init__(self, item_name: str, command: str, trigger_expression: str, func):
         self.item_name = item_name
         self.command = command
-        super().__init__(expression, func)
+        super().__init__(trigger_expression, func)
 
     def matches(self, item_event: ItemEvent) -> bool:
         if item_event.item_name == self.item_name and item_event.operation.lower() == 'command':
@@ -34,12 +34,12 @@ class ItemReceivedCommandTrigger(ItemTrigger):
         return False
 
 
-class ItemChangedTrigger(ItemTrigger):
+class ItemChangedRule(ItemRule):
 
-    def __init__(self, item_name: str, operation: str, expression: str, func):
+    def __init__(self, item_name: str, operation: str, trigger_expression: str, func):
         self.item_name = item_name
         self.operation = operation
-        super().__init__(expression, func)
+        super().__init__(trigger_expression, func)
 
     def matches(self, item_event: ItemEvent) -> bool:
         return item_event.item_name == self.item_name and item_event.operation == 'statechanged'
@@ -47,9 +47,9 @@ class ItemChangedTrigger(ItemTrigger):
 
 class ItemChangeProcessor(Processor):
 
-    def __init__(self, openhab_uri: str, item_registry: ItemRegistry, listener):
+    def __init__(self, openhab_uri: str, item_registry: ItemRegistry, execution_listener_ref: weakref):
         self.__event_consumer = EventConsumer(openhab_uri, self)
-        super().__init__("item change", item_registry, listener)
+        super().__init__("item change", item_registry, execution_listener_ref)
 
     def parser(self):
         return ItemTriggerParser(self).on_annotation
@@ -58,8 +58,8 @@ class ItemChangeProcessor(Processor):
         self.item_registry.on_event(event)
         item_event = parse_item_event(event)
         if item_event is not None:
-            for item_changed_trigger in [trigger for trigger in self.triggers if trigger.matches(item_event)]:
-                self.invoke_trigger(item_changed_trigger)
+            for item_changed_rule in [rule for rule in self.rules if rule.matches(item_event)]:
+                self.invoke_rule(item_changed_rule)
 
     def on_start(self):
         self.__event_consumer.start()
@@ -80,7 +80,7 @@ class ItemTriggerParser:
             if self.item_change_processor.item_registry.has_item(itemname):
                 operation = itemname_operation_pair[itemname_operation_pair.index(" "):].strip()
                 operation = operation[len("received "):].strip().lower()
-                self.item_change_processor.add_trigger(ItemReceivedCommandTrigger(itemname, operation, annotation, func))
+                self.item_change_processor.add_rule(ItemReceivedCommandRule(itemname, operation, annotation, func))
                 return True
             else:
                 logging.warning("item " + itemname + " does not exist (trigger " + annotation + ")")
@@ -90,7 +90,7 @@ class ItemTriggerParser:
             itemname = itemname_operation_pair[:itemname_operation_pair.index(" ")].strip()
             if self.item_change_processor.item_registry.has_item(itemname):
                 operation = itemname_operation_pair[itemname_operation_pair.index(" "):].strip()
-                self.item_change_processor.add_trigger(ItemChangedTrigger(itemname, operation, annotation, func))
+                self.item_change_processor.add_rule(ItemChangedRule(itemname, operation, annotation, func))
                 return True
             else:
                 logging.warning("item " + itemname + " does not exist (trigger " + annotation + ")")

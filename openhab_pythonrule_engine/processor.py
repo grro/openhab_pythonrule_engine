@@ -1,6 +1,7 @@
 import logging
+import weakref
 from abc import ABC
-from openhab_pythonrule_engine.trigger import Trigger
+from openhab_pythonrule_engine.rule import Rule
 from openhab_pythonrule_engine.item_registry import ItemRegistry
 
 logging = logging.getLogger(__name__)
@@ -8,37 +9,40 @@ logging = logging.getLogger(__name__)
 
 class Processor(ABC):
 
-    def __init__(self, name: str, item_registry: ItemRegistry, listener):
+    def __init__(self, name: str, item_registry: ItemRegistry, execution_listener_ref: weakref):
         self.name = name
         self.item_registry = item_registry
         self.is_running = False
-        self.triggers = set()
-        self.listener = listener
+        self.rules = set()
+        self.execution_listener_ref = execution_listener_ref
 
-    def __notify_listener(self, trigger: Trigger, error: Exception = None):
+    def __notify_listener(self, rule: Rule, error: Exception = None):
         try:
-            self.listener(trigger, error)
+            execution_listener = self.execution_listener_ref()
+            if execution_listener is not None:
+                execution_listener.on_executed(rule, error)
         except Exception as e:
-            logging.warning("error occurred calling " + self.listener + " " + str(e))
+            logging.warning("error occurred calling " + self.execution_listener_ref() + " " + str(e))
 
-    def add_trigger(self, trigger: Trigger):
-        logging.info(" * register " + trigger.module + "#" + trigger.function_name + "(...) - trigger '" + trigger.expression + "'")
-        self.triggers.add(trigger)
-        self.on_add_trigger(trigger)
+    def add_rule(self, rule: Rule):
+        logging.info(' * register ' + rule.module + '.py#' + rule.function_name + '(...) on @when("' + rule.trigger_expression + '")')
+        self.rules.add(rule)
+        self.on_add_rule(rule)
 
-    def remove_triggers(self, module: str):
-        trigger_of_module = {trigger for trigger in self.triggers if trigger.module == module}
-        logging.info(" * unregister " + module + " (" + self.name + ")")
-        self.triggers = self.triggers - trigger_of_module
-        self.on_remove_triggers(module)
+    def remove_rules(self, module: str):
+        rules_of_module = {rule for rule in self.rules if rule.module == module}
+        for rule in rules_of_module:
+            logging.info(' * unregister ' + rule.module + '.py#' + rule.function_name + '(...) on @when("' + rule.trigger_expression + '")')
+        self.rules = self.rules - rules_of_module
+        self.on_remove_rules(module)
 
-    def invoke_trigger(self, trigger: Trigger):
+    def invoke_rule(self, rule: Rule):
         try:
-            trigger.invoke(self.item_registry)
-            self.__notify_listener(trigger)
+            rule.invoke(self.item_registry)
+            self.__notify_listener(rule)
         except Exception as e:
-            logging.warning("Error occurred by executing rule " + trigger.function_name, e)
-            self.__notify_listener(trigger, e)
+            logging.warning("Error occurred by executing rule " + rule.function_name, e)
+            self.__notify_listener(rule, e)
 
     def start(self):
         if not self.is_running:
@@ -57,9 +61,9 @@ class Processor(ABC):
     def on_stop(self):
         pass
 
-    def on_add_trigger(self, trigger: Trigger):
+    def on_add_rule(self, rule: Rule):
         pass
 
-    def on_remove_triggers(self, module: str):
+    def on_remove_rules(self, module: str):
         pass
 

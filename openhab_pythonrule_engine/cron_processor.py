@@ -1,26 +1,29 @@
 import logging
 import pycron
+import weakref
 from time import sleep
 from threading import Thread
+from datetime import datetime
 from openhab_pythonrule_engine.item_registry import ItemRegistry
-from openhab_pythonrule_engine.trigger import Trigger
+from openhab_pythonrule_engine.rule import Rule
 from openhab_pythonrule_engine.processor import Processor
 
 
 logging = logging.getLogger(__name__)
 
-class CronTrigger(Trigger):
+class CronRule(Rule):
 
-    def __init__(self, expression: str, cron: str, func):
+    def __init__(self, trigger_expression: str, cron: str, func):
         self.cron = cron
-        super().__init__(expression, func)
+        super().__init__(trigger_expression, func)
 
 
 class CronProcessor(Processor):
 
-    def __init__(self, item_registry: ItemRegistry, listener):
+    def __init__(self, item_registry: ItemRegistry, listener_ref: weakref):
         self.thread = Thread(target=self.__process, daemon=True)
-        super().__init__("cron", item_registry, listener)
+        self.last_execution = datetime.fromtimestamp(0)
+        super().__init__("cron", item_registry, listener_ref)
 
     def parser(self):
         return CronTriggerParser(self).on_annotation
@@ -28,18 +31,17 @@ class CronProcessor(Processor):
     def __process(self):
         while self.is_running:
             try:
-                for cron_trigger in self.triggers:
-                    if pycron.is_now(cron_trigger.cron):
-                        self.invoke_trigger(cron_trigger)
+                if (datetime.now() - self.last_execution).total_seconds() >= 60:  # minimum 60 sec!
+                    self.last_execution = datetime.now()
+                    for rule in self.rules:
+                        if pycron.is_now(rule.cron):
+                            self.invoke_rule(rule)
             except Exception as e:
                 logging.warning("Error occurred by executing cron", e)
-            sleep(60)  # minimum 60 sec!
+            sleep(5)
 
     def on_start(self):
         self.thread.start()
-
-    def on_stop(self):
-        Thread.join(self.thread)
 
 
 class CronTriggerParser:
@@ -58,7 +60,7 @@ class CronTriggerParser:
         if annotation.lower().startswith("time cron"):
             cron = annotation[len("time cron"):].strip()
             if self.is_vaild_cron(cron):
-                self.cron_processor.add_trigger(CronTrigger(annotation, cron, func))
+                self.cron_processor.add_rule(CronRule(annotation, cron, func))
                 return True
             else:
                 logging.warning("cron " + cron + " is invalid (syntax error?)")

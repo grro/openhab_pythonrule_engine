@@ -61,8 +61,11 @@ class EventConsumer:
                 previous_error_time = None
                 try:
                     for event in client.events():
-                        data = json.loads(event.data)
-                        self.event_listener.on_event(data)
+                        if self.is_running:
+                            data = json.loads(event.data)
+                            self.event_listener.on_event(data)
+                        else:
+                            break
                 finally:
                     logging.debug("closing sse stream")
                     client.close()
@@ -70,12 +73,11 @@ class EventConsumer:
             except Exception as e:
                 retry_in_sec = 5
                 if previous_error_time is None:
-                    logging.warning("sse stream " + self.event_uri + " disconnected: " + str(e))
+                    logging.warning("sse stream " + self.event_uri + " failed: " + str(e))
                     logging.info("try to reconnect sse stream in (each) " + str(retry_in_sec) + " sec")
                     previous_error_time = datetime.now()
                 time.sleep(retry_in_sec)
 
     def stop(self):
         self.is_running = False
-        Thread.join(self.thread)
 

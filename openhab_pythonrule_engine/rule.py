@@ -1,5 +1,5 @@
 import logging
-from abc import ABC
+from abc import ABC, abstractmethod
 from datetime import datetime
 from openhab_pythonrule_engine.invoke import Invoker
 from openhab_pythonrule_engine.item_registry import ItemRegistry
@@ -7,10 +7,10 @@ from openhab_pythonrule_engine.item_registry import ItemRegistry
 logging = logging.getLogger(__name__)
 
 
-class Trigger(ABC):
+class Rule(ABC):
 
-    def __init__(self, expression: str, func):
-        self.expression = expression
+    def __init__(self, trigger_expression: str, func):
+        self.trigger_expression = trigger_expression
         self.__func = func
         self.__invoker = Invoker.create(func)
         self.last_executed = None
@@ -18,7 +18,7 @@ class Trigger(ABC):
 
     def invoke(self, item_registry: ItemRegistry):
         try:
-            logging.debug('executing rule ' + self.module + '/' + self.function_name + '  @when("' + self.expression + '")')
+            logging.debug('executing ' + self.module + '.py#' + self.function_name + '(...) on @when("' + self.trigger_expression + '")')
             self.__invoker.invoke(item_registry)
             self.last_executed = datetime.now()
         except Exception as e:
@@ -34,7 +34,7 @@ class Trigger(ABC):
         return self.__func.__name__
 
     def fingerprint(self) -> str:
-        return str(self.module) + "/" + str(self.function_name) + "/" + self.expression
+        return str(self.module) + "/" + str(self.function_name) + "/" + self.trigger_expression
 
     def __hash__(self):
         return hash(self.fingerprint())
@@ -47,3 +47,8 @@ class Trigger(ABC):
 
 
 
+class ExecutionListener(ABC):
+
+    @abstractmethod
+    def on_executed(self, rule: Rule, error: Exception):
+        pass

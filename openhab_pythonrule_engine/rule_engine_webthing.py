@@ -1,10 +1,11 @@
 import tornado.ioloop
 import logging
 from webthing import (Value, Property, Thing, SingleThing, WebThingServer)
-from datetime import datetime
 from typing import List
 from openhab_pythonrule_engine.rule_engine import RuleEngine
-from openhab_pythonrule_engine.trigger import Trigger
+
+
+logging = logging.getLogger(__name__)
 
 
 class RuleEngineThing(Thing):
@@ -76,32 +77,32 @@ class RuleEngineThing(Thing):
 
     def __print_module_info(self) -> List[str]:
         func_info = {}
-        for trigger in self.rule_engine.triggers():
-            key = trigger.module + "#" + trigger.function_name
+        for rule in self.rule_engine.rules():
+            key = rule.module + "#" + rule.function_name
             expressions = func_info.get(key, set())
-            expressions.add(trigger.expression)
+            expressions.add(rule.expression)
             func_info[key] = expressions
         sorted_keys = sorted(list(func_info.keys()))
         return [key + " (" + ", ".join(func_info[key]) + ")" for key in sorted_keys]
 
     def __print_last_executed(self) -> List[str]:
         func_info = {}
-        for trigger in self.rule_engine.triggers():
-            if trigger.last_executed is not None:
-                key = trigger.module + "#" + trigger.function_name
+        for rule in self.rule_engine.rules():
+            if rule.last_executed is not None:
+                key = rule.module + "#" + rule.function_name
                 execution_times = func_info.get(key, [])
-                execution_times.append(trigger.last_executed)
+                execution_times.append(rule.last_executed)
                 func_info[key] = execution_times
         sorted_keys = sorted(list(func_info.keys()))
         return [key + " (" + sorted(func_info[key])[-1].strftime("%H:%M:%S") + ")" for key in sorted_keys]
 
     def __print_last_failed(self) -> List[str]:
         func_info = {}
-        for trigger in self.rule_engine.triggers():
-            if trigger.last_failed is not None:
-                key = trigger.module + "#" + trigger.function_name
+        for rule in self.rule_engine.rules():
+            if rule.last_failed is not None:
+                key = rule.module + "#" + rule.function_name
                 execution_times = func_info.get(key, [])
-                execution_times.append(trigger.last_failed)
+                execution_times.append(rule.last_failed)
                 func_info[key] = execution_times
         sorted_keys = sorted(list(func_info.keys()))
         return [key + " (" + sorted(func_info[key])[-1].strftime("%H:%M:%S") + ")" for key in sorted_keys]
