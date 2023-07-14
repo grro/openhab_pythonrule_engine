@@ -224,7 +224,7 @@ class ItemRegistry:
             with self.__lock:
                 uri = self.openhab_uri+ "rest/items"
                 try:
-                    response = self.__session.get(uri, headers={"Accept": "application/json"}, auth = self.credentials)
+                    response = self.__session.get(uri, headers={"Accept": "application/json"}, auth = self.credentials, timeout=60)
                     if response.status_code == 200:
                         items = {}
                         for entry in response.json():
@@ -245,7 +245,7 @@ class ItemRegistry:
         with self.__lock:
             uri = self.openhab_uri+ "rest/items/" + item_name
             try:
-                response = self.__session.get(uri, headers={"Accept": "application/json"}, auth = self.credentials)
+                response = self.__session.get(uri, headers={"Accept": "application/json"}, auth = self.credentials, timeout=60)
                 if response.status_code == 200:
                     data = response.json()
                     return to_item(data)
@@ -282,7 +282,7 @@ class ItemRegistry:
         with self.__lock:
             uri = self.openhab_uri+ "rest/items/" + item_name
             try:
-                response = self.__session.post(uri, data=value, headers={"Content-type": "text/plain"}, auth = self.credentials)
+                response = self.__session.post(uri, data=value, headers={"Content-type": "text/plain"}, auth = self.credentials, timeout=60)
                 if response.status_code == 200:
                     self.__on_last_update(item_name, value)
                     return
