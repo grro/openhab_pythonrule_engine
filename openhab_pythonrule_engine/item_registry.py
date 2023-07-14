@@ -168,7 +168,7 @@ def to_item(data) -> Optional[Item]:
             item = TextItem(data['name'], read_only, group_names, None if (state == 'NULL' or state == 'UNDEF') else state)
         return item
     except Exception as e:
-        logging.warning("error occurred mapping " + str(data) + " to item", e)
+        logging.warning("error occurred mapping " + str(data) + " to item " + str(e))
         return None
 
 
@@ -236,10 +236,10 @@ class ItemRegistry:
                     elif response.status_code == 404:
                         raise Exception("item " +   uri + " not exists " + response.text)
                     else:
-                        raise Exception("could not read item state " +   uri +  " got error " + response.text)
+                        raise Exception("could not read item state " + uri + " got error " + response.text)
                 except Exception as e:
                     self.__renew_session()
-                    logging.warning("error occurred by calling " + uri, e)
+                    logging.warning("error occurred by calling " + uri + " " + str(e))
 
     def get_item(self, item_name: str) -> Optional[Item]:
         with self.__lock:
@@ -254,10 +254,10 @@ class ItemRegistry:
                 elif response.status_code == 401:
                     raise Exception("auth error. user=" + self.credentials.username)
                 else:
-                    raise Exception("could not read item state " +  uri +  " got error " + response.text)
+                    raise Exception("could not read item state " + uri + " got error " + response.text)
             except Exception as e:
                 self.__renew_session()
-                logging.warning("error occurred by calling " + uri, e)
+                logging.warning("error occurred by calling " + uri + " " + str(e))
 
     def has_item(self, item_name: str) -> bool:
         if item_name is None:
@@ -295,12 +295,12 @@ class ItemRegistry:
                     self.__on_last_failed_update(item_name, value, txt)
                     raise Exception(txt)
                 else:
-                    txt = "could not update item state " +   uri +  " got error " + response.text
+                    txt = "could not update item state " + uri + " got error " + response.text
                     self.__on_last_failed_update(item_name, value, txt)
                     raise Exception(txt)
             except Exception as e:
                 self.__renew_session()
-                logging.warning("error occurred by performing put on " + uri, e)
+                logging.warning("error occurred by performing put on " + uri + " " + str(e))
 
     def get_item_metadata(self, item_name: str) -> Optional[Item]:
         items_meta_data = self.get_items(use_cache=True)
