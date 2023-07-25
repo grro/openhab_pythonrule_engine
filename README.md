@@ -1,11 +1,10 @@
 # OpenHAB python rule engine
-A python 3.x rule engine for OpenHAB. This rule engine allows defining rule by using python 3.x. 
+A Python 3.x rule engine for OpenHAB. This rule engine allows you to define rules using Python 3.x. 
 
-**Please consider that the [OpenHAB username/password auhentication](https://www.openhab.org/docs/configuration/restdocs.html) (basic authentication) needs to
-be enabled**. To do this, open [API security settings](doc/api_settings.png) and activate advanced setting [Allow Basic Authentication](doc/basic_auth.png).   
+**Please note that [OpenHAB username/password authentication](https://www.openhab.org/docs/configuration/restdocs.html) (basic authentication)
+must be activated**. To do so, open [API security settings](doc/api_settings.png) and enable the advanced setting [Allow Basic Authentication](doc/basic_auth.png).
 
-
-To run this software you may use Docker or [PIP](https://realpython.com/what-is-pip/) package manager such as shown below
+To run this software, you can use Docker or the [PIP](https://realpython.com/what-is-pip/) package manager, as shown below
 
 **Docker approach**
 ```
@@ -17,14 +16,14 @@ sudo docker run -e openhab_uri=http://192.168.1.17:8080 -e user=me -e pwd=secret
 sudo pip install openhab-pythonrule-engine
 ```
 
-After this installation you may start the rule engine inside your python code or via command line using
+To run this software, you can use Docker or the [PIP](https://realpython.com/what-is-pip/) package manager, as shown below
 ```
 sudo pyrule --command listen --openhab_uri http://localhost:8080 --python_rule_directory /etc/openhab2/automation/rules/python --user me --pwd secret
 ```
-Here, the rule engine will connect the openhab instance running on the local machine on port 8080. Furthermore, the directory /etc/openhab2/automation/rules/python will be used to scan for python-based rules
+In this case, the rules engine connects to the Openhab instance running on the local machine on port 8080. Also, the /etc/openhab2/automation/rules/python directory is used to search for python-based rules
 
-By running a *systemd-based Linux distribution* you may use the *register* command to register and start the rule engine as systemd unit.
-By doing this the rule engine will be started automatically on boot. Starting the rule engine manually using the *listen* command is no longer necessary.
+If you are using a *systemd-based Linux distribution*, you can use the *register* command to register and start the rule engine as a systemd entity.
+This automatically starts the rule engine at boot time. Starting the Rule Engine manually with the *listen* command is no longer necessary.
 ```
 sudo pyrule --command register --openhab_uri http://localhost:8080 --python_rule_directory /etc/openhab2/automation/rules/python --user me --pwd secret
 ```  
@@ -32,7 +31,7 @@ sudo pyrule --command register --openhab_uri http://localhost:8080 --python_rule
 
 **Rules**
 
-To trigger a rule methode the **@when** decorator has to be used. Currently, the conditions listed below are supported
+To trigger a rule method, the **@when** decorator must be used. Currently the conditions listed below are supported
 
 | condition  | example | description  |
 |---|---|---|
@@ -64,6 +63,6 @@ def update_presence_based_on_phone_seen(item_registry: ItemRegistry):
 #update_presence_based_on_phone_seen(item_registry)
 ```
 
-If the rule method defines a (single!) argument, the item_registry object will be injected automatically. 
-The item_registry provides methods to get and set the item state. By setting the state the data value will be 
-auto converted into the item specific data type 
+If the rule method defines a (single!) argument, the item_registry object is automatically injected.
+The item_registry object provides methods for getting and setting the item state. When setting the state, the data value
+is automatically converted to the item-specific data type
