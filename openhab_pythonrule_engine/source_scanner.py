@@ -26,7 +26,7 @@ def process_meta_data_annotation(func, visitors: List) -> int:
             startIdx = len("@when(")
             endIdx = line.index(')', startIdx)
             ano = line[startIdx: endIdx].strip().strip('"')
-            logging.info("annotation '" + ano + "' found")
+            logging.debug("annotation '" + ano + "' found")
             for visitor in visitors:
                 if visitor(ano, func[1]):
                     num_notations += 1
