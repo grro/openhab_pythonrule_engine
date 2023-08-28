@@ -1,6 +1,11 @@
+import logging
 import inspect
 import sys
 from typing import List
+
+
+
+
 
 def visit(modulename: str, visitors: List) -> int:
     num_notations = 0
@@ -21,6 +26,7 @@ def process_meta_data_annotation(func, visitors: List) -> int:
             startIdx = len("@when(")
             endIdx = line.index(')', startIdx)
             ano = line[startIdx: endIdx].strip().strip('"')
+            logging.info("annotation '" + ano + "' found")
             for visitor in visitors:
                 if visitor(ano, func[1]):
                     num_notations += 1

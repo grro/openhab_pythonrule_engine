@@ -12,7 +12,6 @@ from openhab_pythonrule_engine.item_change_processor import ItemChangeProcessor
 from openhab_pythonrule_engine.loaded_rule_processor import RuleLoadedProcessor
 from openhab_pythonrule_engine.source_scanner import visit
 
-logging = logging.getLogger(__name__)
 
 
 class FileSystemListener(FileSystemEventHandler):
@@ -28,16 +27,27 @@ class FileSystemListener(FileSystemEventHandler):
             rule_engine.unload_module(path)
 
     def __load_module(self, path: str):
-        rule_engine = self.rule_engine_ref()
-        if rule_engine is not None:
-            rule_engine.load_module(path)
+        try:
+            rule_engine = self.rule_engine_ref()
+            if rule_engine is not None:
+                rule_engine.load_module(path)
+        except Exception as e:
+            logging.error(e)
 
     def start(self):
-        logging.info("observing rules directory '" + self.dir + "' started")
-        for file in os.scandir(self.dir):
-            self.__load_module(file.name)
-        self.observer.schedule(self, self.dir, recursive=False)
-        self.observer.start()
+        try:
+            logging.info("observing rules directory '" + self.dir + "' started")
+            files = [file for file in os.scandir(self.dir) if file.name.endswith(".py")]
+            logging.debug(str(len(files)) + " files found: " + ", ".join([file.name for file in files]))
+            for file in files:
+                logging.debug("loading file " + file.name)
+                self.__load_module(file.name)
+                logging.debug(file.name + " loaded")
+            logging.debug("opening file listener")
+            self.observer.schedule(self, self.dir, recursive=False)
+            self.observer.start()
+        except Exception as e:
+            logging.error("error occurred starting file listener " + str(e))
 
     def stop(self):
         self.observer.stop()
@@ -48,12 +58,14 @@ class FileSystemListener(FileSystemEventHandler):
         self.__load_module(self.filename(event.dest_path))
 
     def on_deleted(self, event):
+        logging.debug("file " + self.filename(event.src_path) + " deleted")
         self.__unload_module(self.filename(event.src_path))
 
     def on_created(self, event):
         self.__load_module(self.filename(event.src_path))
 
     def on_modified(self, event):
+        logging.debug("file " + self.filename(event.src_path) + " modified")
         self.__load_module(self.filename(event.src_path))
 
     def filename(self, path):
