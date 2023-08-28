@@ -10,7 +10,7 @@ from openhab_pythonrule_engine.rule import Rule, ExecutionListener
 from openhab_pythonrule_engine.cron_processor import CronProcessor
 from openhab_pythonrule_engine.item_change_processor import ItemChangeProcessor
 from openhab_pythonrule_engine.loaded_rule_processor import RuleLoadedProcessor
-from openhab_pythonrule_engine.source_scanner import visit
+from openhab_pythonrule_engine.source_scanner import parse_function_annotations
 
 
 
@@ -40,9 +40,7 @@ class FileSystemListener(FileSystemEventHandler):
             files = [file for file in os.scandir(self.dir) if file.name.endswith(".py")]
             logging.debug(str(len(files)) + " files found: " + ", ".join([file.name for file in files]))
             for file in files:
-                logging.debug("loading file " + file.name)
                 self.__load_module(file.name)
-                logging.debug(file.name + " loaded")
             logging.debug("opening file listener")
             self.observer.schedule(self, self.dir, recursive=False)
             self.observer.start()
@@ -137,13 +135,16 @@ class RuleEngine(ExecutionListener):
                 if modulename in sys.modules:
                     [processor.remove_rules(modulename) for processor in self.__processors]
                     importlib.reload(sys.modules[modulename])
-                    msg = "'" + filename + "' reloaded"
+                    msg = "file '" + filename + "' reloaded"
                 else:
                     importlib.import_module(modulename)
-                    msg = "'" + filename + "' loaded for the first time"
-                num_annotations = visit(modulename, [processor.parser() for processor in self.__processors])
-                if num_annotations > 0:
+                    msg = "file '" + filename + "' loaded for the first time"
+                function_annotations = parse_function_annotations(modulename)
+                if len(function_annotations) > 0:
+                    [processor.on_annotations(function_annotations) for processor in self.__processors]
                     logging.info(msg)
+                else:
+                    logging.info("file '" + filename + "' ignored (no annotations)")
                 self.__notify_listener()
             except Exception as e:
                 logging.warning("error occurred by (re)loading " + filename + " " + str(e), e)

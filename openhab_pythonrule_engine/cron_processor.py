@@ -23,8 +23,22 @@ class CronProcessor(Processor):
         self.last_execution = datetime.fromtimestamp(0)
         super().__init__("cron", item_registry, listener_ref)
 
-    def parser(self):
-        return CronTriggerParser(self).on_annotation
+    def on_annotation(self, annotation: str, func) -> bool:
+        if annotation.lower().startswith("time cron"):
+            cron = annotation[len("time cron"):].strip()
+            if self.is_vaild_cron(cron):
+                self.add_rule(CronRule(annotation, cron, func))
+                return True
+            else:
+                logging.warning("cron " + cron + " is invalid (syntax error?)")
+        return False
+
+    def is_vaild_cron(self, cron: str) -> bool:
+        try:
+            pycron.is_now(cron)
+            return True
+        except Exception as e:
+            return False
 
     def __process(self):
         while self.is_running:
@@ -41,25 +55,3 @@ class CronProcessor(Processor):
     def on_start(self):
         self.thread.start()
 
-
-class CronTriggerParser:
-
-    def __init__(self, cron_processor: CronProcessor):
-        self.cron_processor = cron_processor
-
-    def is_vaild_cron(self, cron: str) -> bool:
-        try:
-            pycron.is_now(cron)
-            return True
-        except Exception as e:
-            return False
-
-    def on_annotation(self, annotation: str, func) -> bool:
-        if annotation.lower().startswith("time cron"):
-            cron = annotation[len("time cron"):].strip()
-            if self.is_vaild_cron(cron):
-                self.cron_processor.add_rule(CronRule(annotation, cron, func))
-                return True
-            else:
-                logging.warning("cron " + cron + " is invalid (syntax error?)")
-        return False

@@ -1,6 +1,7 @@
 import logging
 import weakref
-from abc import ABC
+from abc import ABC, abstractmethod
+from typing import Dict, List, Any
 from openhab_pythonrule_engine.rule import Rule
 from openhab_pythonrule_engine.item_registry import ItemRegistry
 
@@ -15,6 +16,15 @@ class Processor(ABC):
         self.is_running = False
         self.rules = set()
         self.execution_listener_ref = execution_listener_ref
+
+    def on_annotations(self, function_annotations: Dict[Any, List[str]]):
+        for func, annotations in function_annotations.items():
+            for annotation in annotations:
+                self.on_annotation(annotation, func)
+
+    @abstractmethod
+    def on_annotation(self, annotation: str, func) -> bool:
+        pass
 
     def __notify_listener(self, rule: Rule, error: Exception = None):
         try:

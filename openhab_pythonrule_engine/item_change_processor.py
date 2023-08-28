@@ -51,8 +51,29 @@ class ItemChangeProcessor(Processor):
         self.__event_consumer = EventConsumer(openhab_uri, self)
         super().__init__("item change", item_registry, execution_listener_ref)
 
-    def parser(self):
-        return ItemTriggerParser(self).on_annotation
+    def on_annotation(self, annotation: str, func) -> bool:
+        if annotation.lower().startswith("item") and (annotation.lower().endswith(" received command on") or annotation.lower().endswith(" received command off")):
+            itemname_operation_pair = annotation[len("item"):].strip()
+            itemname = itemname_operation_pair[:itemname_operation_pair.index(" ")].strip()
+            if self.item_registry.has_item(itemname):
+                operation = itemname_operation_pair[itemname_operation_pair.index(" "):].strip()
+                operation = operation[len("received "):].strip().lower()
+                self.add_rule(ItemReceivedCommandRule(itemname, operation, annotation, func))
+                return True
+            else:
+                logging.warning("item " + itemname + " does not exist (trigger " + annotation + ")")
+
+        elif annotation.lower().startswith("item"):
+            itemname_operation_pair = annotation[len("item"):].strip()
+            itemname = itemname_operation_pair[:itemname_operation_pair.index(" ")].strip()
+            if self.item_registry.has_item(itemname):
+                operation = itemname_operation_pair[itemname_operation_pair.index(" "):].strip()
+                self.add_rule(ItemChangedRule(itemname, operation, annotation, func))
+                return True
+            else:
+                logging.warning("item " + itemname + " does not exist (trigger " + annotation + ")")
+        return False
+
 
     def on_event(self, event):
         self.item_registry.on_event(event)
@@ -66,33 +87,4 @@ class ItemChangeProcessor(Processor):
 
     def on_stop(self):
         self.__event_consumer.stop()
-
-
-class ItemTriggerParser:
-
-    def __init__(self, item_change_processor: ItemChangeProcessor):
-        self.item_change_processor = item_change_processor
-
-    def on_annotation(self, annotation: str, func) -> bool:
-        if annotation.lower().startswith("item") and (annotation.lower().endswith(" received command on") or annotation.lower().endswith(" received command off")):
-            itemname_operation_pair = annotation[len("item"):].strip()
-            itemname = itemname_operation_pair[:itemname_operation_pair.index(" ")].strip()
-            if self.item_change_processor.item_registry.has_item(itemname):
-                operation = itemname_operation_pair[itemname_operation_pair.index(" "):].strip()
-                operation = operation[len("received "):].strip().lower()
-                self.item_change_processor.add_rule(ItemReceivedCommandRule(itemname, operation, annotation, func))
-                return True
-            else:
-                logging.warning("item " + itemname + " does not exist (trigger " + annotation + ")")
-
-        elif annotation.lower().startswith("item"):
-            itemname_operation_pair = annotation[len("item"):].strip()
-            itemname = itemname_operation_pair[:itemname_operation_pair.index(" ")].strip()
-            if self.item_change_processor.item_registry.has_item(itemname):
-                operation = itemname_operation_pair[itemname_operation_pair.index(" "):].strip()
-                self.item_change_processor.add_rule(ItemChangedRule(itemname, operation, annotation, func))
-                return True
-            else:
-                logging.warning("item " + itemname + " does not exist (trigger " + annotation + ")")
-        return False
 

@@ -1,23 +1,21 @@
 import logging
 import inspect
 import sys
-from typing import List
+from typing import List, Dict, Any
 
 
-
-
-
-def visit(modulename: str, visitors: List) -> int:
-    num_notations = 0
+def parse_function_annotations(modulename: str) -> Dict[Any, List[str]]:
+    function_annotations = {}
     try:
         for func in inspect.getmembers(sys.modules[modulename], inspect.isfunction):
-            num_notations += process_meta_data_annotation(func, visitors)
+            function_annotations[func[1]] = parse_annotations(func)
     except Exception as e:
         print(e)
-    return num_notations
+    return function_annotations
 
-def process_meta_data_annotation(func, visitors: List) -> int:
-    num_notations = 0
+
+def parse_annotations(func) -> List[str]:
+    annotations = []
     source = inspect.getsource(func[1])
     index = source.find("def ")
     for line in source[:index].strip().splitlines():
@@ -26,8 +24,6 @@ def process_meta_data_annotation(func, visitors: List) -> int:
             startIdx = len("@when(")
             endIdx = line.index(')', startIdx)
             ano = line[startIdx: endIdx].strip().strip('"')
+            annotations.append(ano)
             logging.debug("annotation '" + ano + "' found")
-            for visitor in visitors:
-                if visitor(ano, func[1]):
-                    num_notations += 1
-    return num_notations
+    return annotations
