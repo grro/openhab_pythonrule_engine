@@ -4,8 +4,6 @@ from datetime import datetime
 from openhab_pythonrule_engine.invoke import Invoker
 from openhab_pythonrule_engine.item_registry import ItemRegistry
 
-logging = logging.getLogger(__name__)
-
 
 class Rule(ABC):
 

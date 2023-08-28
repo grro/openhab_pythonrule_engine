@@ -9,8 +9,6 @@ from openhab_pythonrule_engine.rule import Rule
 from openhab_pythonrule_engine.processor import Processor
 
 
-logging = logging.getLogger(__name__)
-
 class CronRule(Rule):
 
     def __init__(self, trigger_expression: str, cron: str, func):

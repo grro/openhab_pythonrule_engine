@@ -5,8 +5,6 @@ from typing import List
 from openhab_pythonrule_engine.rule_engine import RuleEngine
 
 
-logging = logging.getLogger(__name__)
-
 
 class RuleEngineThing(Thing):
 
