@@ -45,7 +45,7 @@ class CronProcessor(Processor):
             try:
                 if (datetime.now() - self.last_execution).total_seconds() >= 60:  # minimum 60 sec!
                     self.last_execution = datetime.now()
-                    for rule in self.rules:
+                    for rule in list(self.rules):
                         if pycron.is_now(rule.cron):
                             self.invoke_rule(rule)
             except Exception as e:
