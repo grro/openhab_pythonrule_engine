@@ -23,7 +23,7 @@ ExecStart=$entrypoint --command listen --port $port --openhab_uri $openhab_uri -
 SyslogIdentifier=$packagename
 StandardOutput=syslog
 StandardError=syslog
-Restart=always
+Restart=on-failure
 RestartSec=3
 
 [Install]
