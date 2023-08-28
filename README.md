@@ -16,7 +16,6 @@ sudo docker run -e openhab_uri=http://192.168.1.17:8080 -e user=me -e pwd=secret
 sudo pip install openhab-pythonrule-engine
 ```
 
-To run this software, you can use Docker or the [PIP](https://realpython.com/what-is-pip/) package manager, as shown below
 ```
 sudo pyrule --command listen --openhab_uri http://localhost:8080 --python_rule_directory /etc/openhab2/automation/rules/python --user me --pwd secret
 ```

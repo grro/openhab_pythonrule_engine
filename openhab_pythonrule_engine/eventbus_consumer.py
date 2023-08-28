@@ -53,6 +53,7 @@ class EventConsumer:
                 conn_timeout = 30
                 read_timeout = 5 * 60
                 response = requests.get(self.event_uri, stream=True, timeout=(conn_timeout, read_timeout))
+                response.raise_for_status()
                 client = sseclient.SSEClient(response)
                 if previous_error_time is None:
                     logging.info("sse stream " + self.event_uri + " established")
