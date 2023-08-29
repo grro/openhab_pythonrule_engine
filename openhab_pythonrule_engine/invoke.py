@@ -79,7 +79,11 @@ class InvokerManager:
 
     def running_invocations(self) -> List[str]:
         with self.__lock:
-            return sorted([str(invocation_runner) for invocation_runner in self.__running_invocations.keys()])
+            info = []
+            for id, running_since in self.__running_invocations.items():
+                elapsed_min = round((datetime.now() - running_since).total_seconds() / 60, 1)
+                info.append(id + " (since " + str(elapsed_min) + " min)")
+            return sorted(info)
 
     def add_listener(self, listener):
         self.__listeners.add(listener)
