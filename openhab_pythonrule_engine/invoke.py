@@ -72,21 +72,21 @@ class InvokerManager:
     def __init__(self, num_runners: int = 10):
         self.is_running = True
         self.num_runners = num_runners
-        self.listeners = set()
-        self.lock = Lock()
-        self.running_invocations = {}
-        self.queue = Queue()
+        self.__listeners = set()
+        self.__lock = Lock()
+        self.__running_invocations = {}
+        self.__queue = Queue()
 
     def running_invocations(self) -> List[str]:
-        with self.lock:
-            return [str(invocation_runner) for invocation_runner in self.running_invocations.values()]
+        with self.__lock:
+            return [str(invocation_runner) for invocation_runner in self.__running_invocations.values()]
 
     def add_listener(self, listener):
-        self.listeners.add(listener)
+        self.__listeners.add(listener)
         self.__notify_listener()
 
     def __notify_listener(self):
-        for listener in self.listeners:
+        for listener in self.__listeners:
             try:
                 listener()
             except Exception as e:
@@ -99,30 +99,30 @@ class InvokerManager:
         self.is_running = False
 
     def initiate_invoke(self, invoker: AsncInvoker, item_registry : ItemRegistry):
-        self.queue.put(InvocationRunner(invoker, item_registry))
+        self.__queue.put(InvocationRunner(invoker, item_registry))
 
     def register_running(self, invocation_runner : InvocationRunner) -> Optional[datetime]:
         try:
-            with self.lock:
-                if invocation_runner.id in self.running_invocations.keys():
-                    return self.running_invocations[invocation_runner.id]
+            with self.__lock:
+                if invocation_runner.id in self.__running_invocations.keys():
+                    return self.__running_invocations[invocation_runner.id]
                 else:
-                    self.running_invocations[invocation_runner.id] = datetime.now()
+                    self.__running_invocations[invocation_runner.id] = datetime.now()
                     return None
         finally:
             self.__notify_listener()
 
     def deregister_running(self, invocation_runner : InvocationRunner):
         try:
-            with self.lock:
-                self.running_invocations.pop(invocation_runner.id, None)
+            with self.__lock:
+                self.__running_invocations.pop(invocation_runner.id, None)
         finally:
             self.__notify_listener()
 
     def loop_invoke_runner(self, runner_id: int):
         while self.is_running:
             try:
-                invocation_runner = self.queue.get(timeout=3)
+                invocation_runner = self.__queue.get(timeout=3)
                 running_since = self.register_running(invocation_runner)
                 if running_since is None:
                     try:

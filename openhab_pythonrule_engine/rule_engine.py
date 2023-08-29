@@ -90,7 +90,7 @@ class RuleEngine(ExecutionListener):
         return [rule for processor in self.__processors for rule in processor.rules]
 
     def running_invocations(self) -> List[str]:
-        return self.__invocation_manager.running_invocations()
+        return self.__invocation_manager.__running_invocations()
 
     def on_executed(self, rule: Rule, error: Exception):
         self.__notify_listener()
