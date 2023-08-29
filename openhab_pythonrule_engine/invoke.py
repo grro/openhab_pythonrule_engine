@@ -69,7 +69,7 @@ class InvocationRunner:
 
 class InvokerManager:
 
-    def __init__(self, num_runners: int = 10):
+    def __init__(self, num_runners: int = 20):
         self.is_running = True
         self.num_runners = num_runners
         self.__listeners = set()
