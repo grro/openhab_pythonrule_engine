@@ -79,7 +79,7 @@ class InvokerManager:
 
     def running_invocations(self) -> List[str]:
         with self.__lock:
-            return [str(invocation_runner) for invocation_runner in self.__running_invocations.keys()]
+            return sorted([str(invocation_runner) for invocation_runner in self.__running_invocations.keys()])
 
     def add_listener(self, listener):
         self.__listeners.add(listener)
