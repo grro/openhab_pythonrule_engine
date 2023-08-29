@@ -1,16 +1,16 @@
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
-from openhab_pythonrule_engine.invoke import Invoker
+from openhab_pythonrule_engine.invoke import InvokerManager
 from openhab_pythonrule_engine.item_registry import ItemRegistry
 
 
 class Rule(ABC):
 
-    def __init__(self, trigger_expression: str, func):
+    def __init__(self, trigger_expression: str, func, invoker_manager: InvokerManager):
         self.trigger_expression = trigger_expression
         self.__func = func
-        self.__invoker = Invoker.create(func)
+        self.__invoker = invoker_manager.new_invoker(func)
         self.last_executed = None
         self.last_failed = None
 

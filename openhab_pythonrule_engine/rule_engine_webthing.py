@@ -67,6 +67,19 @@ class RuleEngineThing(Thing):
                          'readOnly': True
                      }))
 
+        self.running_invocations = Value("")
+        self.add_property(
+            Property(self,
+                     'running_invocations',
+                     self.running_invocations,
+                     metadata={
+                         'title': 'Running invocations',
+                         'type': 'string',
+                         'description': 'list of running invocations',
+                         'readOnly': True
+                     }))
+
+
         self.ioloop = tornado.ioloop.IOLoop.current()
         self.rule_engine.add_listener(self.on_update)
 
@@ -109,6 +122,7 @@ class RuleEngineThing(Thing):
         self.last_executed.notify_of_external_update(", ".join(self.__print_last_executed()))
         self.last_failed.notify_of_external_update(", ".join(self.__print_last_failed()))
         self.loaded_modules.notify_of_external_update(", ".join(self.__print_module_info()))
+        self.running_invocations.notify_of_external_update(", ".join(self.rule_engine.running_invocations()))
 
 def run_server(port: int, description: str, rule_engine: RuleEngine):
     rule_engine_webthing = RuleEngineThing(description, rule_engine)

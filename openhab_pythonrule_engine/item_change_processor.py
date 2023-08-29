@@ -2,6 +2,7 @@ import json
 import logging
 import weakref
 from openhab_pythonrule_engine.item_registry import ItemRegistry
+from openhab_pythonrule_engine.invoke import InvokerManager
 from openhab_pythonrule_engine.rule import Rule
 from openhab_pythonrule_engine.processor import Processor
 from openhab_pythonrule_engine.eventbus_consumer import EventConsumer, ItemEvent, parse_item_event
@@ -11,8 +12,8 @@ logging = logging.getLogger(__name__)
 
 class ItemRule(Rule):
 
-    def __init__(self, trigger_expression: str, func):
-        super().__init__(trigger_expression, func)
+    def __init__(self, trigger_expression: str, func, invoker_manager: InvokerManager):
+        super().__init__(trigger_expression, func, invoker_manager)
 
     def matches(self, item_event: ItemEvent) -> bool:
         return False
@@ -20,10 +21,10 @@ class ItemRule(Rule):
 
 class ItemReceivedCommandRule(ItemRule):
 
-    def __init__(self, item_name: str, command: str, trigger_expression: str, func):
+    def __init__(self, item_name: str, command: str, trigger_expression: str, func, invoker_manager: InvokerManager):
         self.item_name = item_name
         self.command = command
-        super().__init__(trigger_expression, func)
+        super().__init__(trigger_expression, func, invoker_manager)
 
     def matches(self, item_event: ItemEvent) -> bool:
         if item_event.item_name == self.item_name and item_event.operation.lower() == 'command':
@@ -36,10 +37,10 @@ class ItemReceivedCommandRule(ItemRule):
 
 class ItemChangedRule(ItemRule):
 
-    def __init__(self, item_name: str, operation: str, trigger_expression: str, func):
+    def __init__(self, item_name: str, operation: str, trigger_expression: str, func, invoker_manager: InvokerManager):
         self.item_name = item_name
         self.operation = operation
-        super().__init__(trigger_expression, func)
+        super().__init__(trigger_expression, func, invoker_manager)
 
     def matches(self, item_event: ItemEvent) -> bool:
         return item_event.item_name == self.item_name and item_event.operation == 'statechanged'
@@ -47,7 +48,8 @@ class ItemChangedRule(ItemRule):
 
 class ItemChangeProcessor(Processor):
 
-    def __init__(self, openhab_uri: str, item_registry: ItemRegistry, execution_listener_ref: weakref):
+    def __init__(self, openhab_uri: str, item_registry: ItemRegistry, execution_listener_ref: weakref, invoker_manager: InvokerManager):
+        self.invoker_manager = invoker_manager
         self.__event_consumer = EventConsumer(openhab_uri, self)
         super().__init__("item change", item_registry, execution_listener_ref)
 
@@ -58,7 +60,7 @@ class ItemChangeProcessor(Processor):
             if self.item_registry.has_item(itemname):
                 operation = itemname_operation_pair[itemname_operation_pair.index(" "):].strip()
                 operation = operation[len("received "):].strip().lower()
-                self.add_rule(ItemReceivedCommandRule(itemname, operation, annotation, func))
+                self.add_rule(ItemReceivedCommandRule(itemname, operation, annotation, func, self.invoker_manager))
                 return True
             else:
                 logging.warning("item " + itemname + " does not exist (trigger " + annotation + ")")
@@ -68,7 +70,7 @@ class ItemChangeProcessor(Processor):
             itemname = itemname_operation_pair[:itemname_operation_pair.index(" ")].strip()
             if self.item_registry.has_item(itemname):
                 operation = itemname_operation_pair[itemname_operation_pair.index(" "):].strip()
-                self.add_rule(ItemChangedRule(itemname, operation, annotation, func))
+                self.add_rule(ItemChangedRule(itemname, operation, annotation, func, self.invoker_manager))
                 return True
             else:
                 logging.warning("item " + itemname + " does not exist (trigger " + annotation + ")")
