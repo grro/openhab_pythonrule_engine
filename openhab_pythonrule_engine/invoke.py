@@ -100,8 +100,8 @@ class InvokerManager:
     def running_invocations(self) -> List[str]:
         with self.__lock:
             info = []
-            for id, running_since in self.__running_invocations.items():
-                info.append(id + " (since " + str((datetime.now() - running_since)))
+            for invoker, running_since in self.__running_invocations.items():
+                info.append(str(invoker) + " (since " + str((datetime.now() - running_since)))
             return sorted(info)
 
     def add_listener(self, listener):
