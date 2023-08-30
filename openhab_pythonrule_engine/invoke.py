@@ -1,5 +1,6 @@
 import inspect
 import logging
+from abc import ABC, abstractmethod
 from typing import Optional, List
 from queue import Queue, Empty
 from datetime import datetime
@@ -8,10 +9,35 @@ from openhab_pythonrule_engine.item_registry import ItemRegistry
 
 
 
+class Invoker(ABC):
 
-class Invoker():
+    @abstractmethod
+    def invoke(self, item_registry: ItemRegistry):
+        pass
+
+
+
+class InvokerImpl(Invoker):
 
     TYPE_SINGLE_PARAM_ITEMREGISTRY = "TYPE_SINGLE_PARAM_ITEMREGISTRY"
+
+    @staticmethod
+    def create(func) -> Optional:
+        type = ""
+        spec = inspect.getfullargspec(func)
+
+        # one argument ItemRegistry
+        if len(spec.args) == 1:
+            type = InvokerImpl.TYPE_SINGLE_PARAM_ITEMREGISTRY
+            if spec.args[0] in spec.annotations:
+                if spec.annotations[spec.args[0]] != ItemRegistry:
+                    logging.warning("parameter " + str(spec.args[0]) + " is of type " + str(spec.annotations[spec.args[0]]) + ". " +
+                                    str(spec.annotations[spec.args[0]]) + " is not supported (supported: ItemRegistry)")
+                    return None
+            else:
+                logging.warning("assuming that parameter " + spec.args[0] + " is of type ItemRegistry. " \
+                                                                            "Please use type hints such as " + func.__name__ + "(" + spec.args[0]  + ": ItemRegistry)")
+        return InvokerImpl(func, type)
 
     def __init__(self, func, type: str):
         self._func = func
@@ -19,16 +45,12 @@ class Invoker():
         self.fullname = func.__module__ + "#" + self.name
         self.__type = type
 
-    @property
-    def id(self) -> str:
-        return self.fullname
-
     def __str__(self):
-        return self.id
+        return self.fullname
 
     def invoke(self, item_registry: ItemRegistry):
         try:
-            if self.__type ==  self.TYPE_SINGLE_PARAM_ITEMREGISTRY:
+            if self.__type == self.TYPE_SINGLE_PARAM_ITEMREGISTRY:
                 self._func(item_registry)
             else:
                 self._func()
@@ -36,32 +58,24 @@ class Invoker():
             raise Exception("Error occurred executing function " + self.fullname + "(...)") from e
 
 
+class AsyncInvoker(Invoker):
 
-class AsncInvoker(Invoker):
-
-    def __init__(self, invoker_manager, func, type: str):
+    def __init__(self, invoker: Invoker, invoker_manager):
+        self.invoker = invoker
         self.invoker_manager = invoker_manager
-        super().__init__(func, type)
 
     def invoke(self, item_registry: ItemRegistry):
-        self.invoker_manager.invoke_async(Invocation(self, item_registry))
-
-    def real_invoke(self, item_registry: ItemRegistry):
-        super().invoke(item_registry)
+        self.invoker_manager.invoke_async(Invocation(self.invoker, item_registry))
 
 
 class Invocation:
 
-    def __init__(self, invoker: AsncInvoker, item_registry : ItemRegistry):
+    def __init__(self, invoker: Invoker, item_registry : ItemRegistry):
         self.invoker = invoker
         self.item_registry = item_registry
 
-    @property
-    def id(self) -> str:
-        return self.invoker.id
-
     def invoke(self):
-        self.invoker.real_invoke(self.item_registry)
+        self.invoker.invoke(self.item_registry)
 
     def __str__(self):
         return str(self.invoker)
@@ -80,8 +94,7 @@ class InvokerManager:
         with self.__lock:
             info = []
             for id, running_since in self.__running_invocations.items():
-                elapsed_min = round((datetime.now() - running_since).total_seconds() / 60, 2)
-                info.append(id + " (since " + str(elapsed_min) + " min)")
+                info.append(id + " (since " + str((datetime.now() - running_since)))
             return sorted(info)
 
     def add_listener(self, listener):
@@ -104,10 +117,10 @@ class InvokerManager:
     def register_running(self, invocation_runner : Invocation) -> Optional[datetime]:
         try:
             with self.__lock:
-                if invocation_runner.id in self.__running_invocations.keys():
-                    return self.__running_invocations[invocation_runner.id]
+                if invocation_runner.invoker in self.__running_invocations.keys():
+                    return self.__running_invocations[invocation_runner.invoker]
                 else:
-                    self.__running_invocations[invocation_runner.id] = datetime.now()
+                    self.__running_invocations[invocation_runner.invoker] = datetime.now()
                     return None
         finally:
             self.__notify_listener()
@@ -115,7 +128,7 @@ class InvokerManager:
     def deregister_running(self, invocation_runner : Invocation):
         try:
             with self.__lock:
-                self.__running_invocations.pop(invocation_runner.id, None)
+                self.__running_invocations.pop(invocation_runner.invoker, None)
         finally:
             self.__notify_listener()
 
@@ -137,32 +150,20 @@ class InvokerManager:
                     finally:
                         self.deregister_running(invocation)
                 else:
-                    elapsed_min = round((datetime.now() - running_since).total_seconds() / 60, 1)
-                    if elapsed_min > 2:
-                        logging.warning("[runner" + str(runner_id) + "] reject invoking " + str(invocation) + " Invocation hangs (since " + str(elapsed_min) + " min)")
+                    elapsed = datetime.now() - running_since
+                    if elapsed.total_seconds() > 2 * 60:
+                        logging.warning("[runner" + str(runner_id) + "] reject invoking " + str(invocation) + " Invocation hangs (since " + str(elapsed) + ")")
                     else:
-                        logging.debug("[runner" + str(runner_id) + "] reject invoking " + str(invocation) + " Invocation is already running (since " + str(elapsed_min) + " min)")
+                        logging.debug("[runner" + str(runner_id) + "] reject invoking " + str(invocation) + " Invocation is already running (since " + str(elapsed) + ")")
             except Empty as e:
                 pass
             except Exception as e:
                 logging.warning("[runner" + str(runner_id) + "] error occurred " + str(e))
 
     def new_invoker(self, func):
-        type = ""
-        spec = inspect.getfullargspec(func)
-
-        # one argument ItemRegistry
-        if len(spec.args) == 1:
-            type = Invoker.TYPE_SINGLE_PARAM_ITEMREGISTRY
-            if spec.args[0] in spec.annotations:
-                if spec.annotations[spec.args[0]] != ItemRegistry:
-                    logging.warning("parameter " + str(spec.args[0]) + " is of type " + str(spec.annotations[spec.args[0]]) + ". " +
-                                    str(spec.annotations[spec.args[0]]) + " is not supported (supported: ItemRegistry)")
-                    return None
-            else:
-                logging.warning("assuming that parameter " + spec.args[0] + " is of type ItemRegistry. " \
-                                                                            "Please use type hints such as " + func.__name__ + "(" + spec.args[0]  + ": ItemRegistry)")
-        #return Invoker(func, type)
-        return AsncInvoker(self, func, type)
+        invoker = InvokerImpl.create(func)
+        if invoker is not None:
+            invoker = AsyncInvoker(invoker, self)
+        return invoker
 
 
