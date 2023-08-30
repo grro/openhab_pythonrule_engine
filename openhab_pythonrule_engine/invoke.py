@@ -58,7 +58,14 @@ class InvokerImpl(Invoker):
             raise Exception("Error occurred executing function " + self.fullname + "(...)") from e
 
 
-class AsyncInvoker(Invoker):
+class AsyncInvokerWrapper(Invoker):
+
+    @staticmethod
+    def create(invoker: Invoker, invoker_manager) -> Optional:
+        if invoker is None:
+            return None
+        else:
+            return AsyncInvokerWrapper(invoker, invoker_manager)
 
     def __init__(self, invoker: Invoker, invoker_manager):
         self.invoker = invoker
@@ -162,8 +169,7 @@ class InvokerManager:
 
     def new_invoker(self, func):
         invoker = InvokerImpl.create(func)
-        if invoker is not None:
-            invoker = AsyncInvoker(invoker, self)
+        invoker = AsyncInvokerWrapper.create(invoker, self)
         return invoker
 
 
