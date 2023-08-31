@@ -18,6 +18,7 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
+ExecStartPre=/bin/sleep 60
 Type=simple
 ExecStart=$entrypoint --command listen --port $port --openhab_uri $openhab_uri --python_rule_directory $python_rule_directory --user $user --pwd $pwd    
 SyslogIdentifier=$packagename
