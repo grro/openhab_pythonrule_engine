@@ -55,7 +55,7 @@ class InvokerImpl(Invoker):
             else:
                 self._func()
         except Exception as e:
-            raise Exception("Error occurred executing function " + self.fullname + "(...)") from e
+            raise Exception("Error occurred executing function " + self.fullname + "(...)" + " " + str(e)) from e
 
 
 class AsyncInvokerWrapper(Invoker):
