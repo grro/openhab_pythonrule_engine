@@ -153,7 +153,7 @@ class InvokerManager:
                         logging.debug("[runner" + str(runner_id) + "] invoking " + str(invocation))
                         invocation.invoke()
                     except Exception as e:
-                        logging.warning("[runner" + str(runner_id) + "] error occurred calling " + str(invocation) + " " + str(e))
+                        logging.warning("[runner" + str(runner_id) + "] error occurred calling " + str(invocation) + " " + str(e), e)
                     finally:
                         self.deregister_running(invocation)
                 else:

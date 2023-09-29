@@ -129,3 +129,4 @@ dmypy.json
 .pyre/
 /openhab_pythonrule_engine.iml
 /openhab_pythonrule_engine/deleteme.py
+/test/power.py
